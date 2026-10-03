@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление продажами — Театр Земли & KIM.FILM</title>
-    <!-- Подключаем наш файл настроек -->
+    
+    <!-- Подключаем настройки и промпты -->
     <script src="config.js"></script>
+    <script src="prompt_content.js"></script>
+    <script src="prompt_admin.js"></script>
+    <script src="prompt_sales.js"></script>
+    <script src="prompt_art.js"></script>
+    
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
         
-        /* Экран авторизации */
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
         .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .login-box button { width: 100%; background: #333; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* Индикатор ключа */
         .key-status { position: absolute; top: 20px; right: 30px; background: #e2f0d9; color: #385723; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; border: 1px solid #c5e0b4; }
         .key-status.warning { background: #fff2cc; color: #7f6000; border-color: #ffe699; }
         .key-status.error { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
@@ -50,7 +54,6 @@
 </head>
 <body>
 
-<!-- Экран авторизации -->
 <div id="loginOverlay">
     <div class="login-box">
         <h3>Вход в систему</h3>
@@ -94,7 +97,7 @@
         <div class="chat-box" id="chatBox"></div>
         <div class="chat-input-area">
             <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ..."></textarea>
-            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', CONFIG.prompts.content)">Отправить</button>
+            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_CONTENT)">Отправить</button>
         </div>
     </div>
 
@@ -129,7 +132,7 @@
         <div class="chat-box" id="partnerChatBox"></div>
         <div class="chat-input-area">
             <textarea id="partnerChatReply" rows="3" placeholder="Задайте вопрос маркетологу..."></textarea>
-            <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', CONFIG.prompts.sales)">Отправить</button>
+            <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">Отправить</button>
         </div>
     </div>
 
@@ -176,7 +179,6 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
-    // Управление ключами
     let currentKeyIndex = 0;
     
     function updateKeyStatusUI() {
@@ -191,7 +193,6 @@
         }
     }
 
-    // Авторизация
     function checkLogin() {
         const l = document.getElementById('loginInput').value.trim();
         const p = document.getElementById('passInput').value.trim();
@@ -210,10 +211,9 @@
         location.reload();
     }
 
-    // Инициализация при загрузке
     window.onload = () => {
-        if(typeof CONFIG === 'undefined') {
-            alert("Ошибка: файл config.js не найден! Проверьте, загрузили ли вы его на GitHub.");
+        if(typeof CONFIG === 'undefined' || typeof PROMPT_CONTENT === 'undefined') {
+            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -236,7 +236,6 @@
         document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
     }
 
-    // --- ОБЛАЧНАЯ БАЗА ПРОЕКТОВ ---
     let projectsDB = [];
 
     async function loadProjectsFromCloud() {
@@ -299,7 +298,6 @@
         return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nНаш аргумент: ${p.argument}\n`;
     }
 
-    // --- ССЫЛКИ И ЧАТЫ ---
     function addLinkField() {
         const div = document.createElement('div');
         div.className = 'link-row';
@@ -351,7 +349,7 @@
         localStorage.setItem('theater_admin_chat_history', JSON.stringify(history));
         document.getElementById('adminChatReply').value = '';
         renderChatUI('theater_admin_chat_history', 'adminChatBox');
-        await processTurn('theater_admin_chat_history', 'adminChatBox', CONFIG.prompts.admin, getLinksContext());
+        await processTurn('theater_admin_chat_history', 'adminChatBox', PROMPT_ADMIN, getLinksContext());
     }
 
     function startNewCampaign() {
@@ -363,7 +361,7 @@
         const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Продвижение. Период: с ${start} по ${end}. Цель: ${sum} руб.\nПРАВИЛО: Работаем в 3 шага.\nШАГ 1: Дай только краткий концепт и расписание. Спроси, утверждаю ли я.\nШАГ 2: (После моего "да") Пишем полные тексты.\nШАГ 3: (В конце) Делаем резюме.\nЖду Шаг 1.`;
         localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_chat_history', 'chatBox');
-        processTurn('theater_chat_history', 'chatBox', CONFIG.prompts.content);
+        processTurn('theater_chat_history', 'chatBox', PROMPT_CONTENT);
     }
 
     function startNewPartnerSearch() {
@@ -372,10 +370,9 @@
         const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Поиск ЛПР и партнеров.\nВыдай конкретный план действий:\n1. Кто наши ЛПР (должности).\n2. Где их искать.\n3. Дай 1-2 способа обойти секретаря.\nСпроси меня, что делаем дальше.`;
         localStorage.setItem('theater_partner_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
-        processTurn('theater_partner_chat_history', 'partnerChatBox', CONFIG.prompts.sales);
+        processTurn('theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES);
     }
 
-    // --- ЯДРО API С РОТАЦИЕЙ КЛЮЧЕЙ ---
     async function processTurn(storageKey, boxId, systemPrompt, dynamicContext = "") {
         let history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
@@ -410,7 +407,7 @@
         document.getElementById('imagePreviewContainer').innerHTML = '';
         document.getElementById('artPromptDisplay').innerText = '';
 
-        const artPrompt = `${CONFIG.prompts.art}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
+        const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
         try {
             const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director.");
@@ -429,7 +426,6 @@
     async function fetchGeminiAPI(contentsArray, activeSystemPrompt) {
         const maxRetries = 3;
         
-        // Цикл перебора ключей из файла config.js
         while(currentKeyIndex < CONFIG.apiKeys.length) {
             const apiKey = CONFIG.apiKeys[currentKeyIndex];
             const url = `${MODEL_URL}?key=${apiKey}`;
@@ -449,19 +445,14 @@
 
                     if (data.error) {
                         const code = data.error.code;
-                        
-                        // Если лимит кончился (429) - переключаем ключ
                         if (code === 429) {
                             currentKeyIndex++;
                             updateKeyStatusUI();
-                            
                             if (currentKeyIndex >= CONFIG.apiKeys.length) {
-                                throw new Error("⚠️ Лимиты исчерпаны на ВСЕХ ключах. Подождите пару часов или добавьте новые в config.js.");
+                                throw new Error("⚠️ Лимиты исчерпаны на ВСЕХ ключах. Подождите или добавьте новые в config.js.");
                             }
-                            // Прерываем попытки с этим ключом, while запустит следующий
                             break; 
                         }
-
                         if (code === 503) {
                             if (attempt < maxRetries) { await new Promise(r => setTimeout(r, 2000)); continue; }
                             throw new Error("⚠️ Серверы Google перегружены (503). Повторите запрос.");
