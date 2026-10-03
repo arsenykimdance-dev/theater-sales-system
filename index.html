@@ -96,8 +96,8 @@
 
         outputBox.innerText = 'ИИ думает, формирует стратегии...';
 
-        // ТОЧНО ПРАВИЛЬНАЯ ССЫЛКА БЕЗ 1.5
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        // ИСПРАВЛЕННАЯ ССЫЛКА НА АКТУАЛЬНУЮ МОДЕЛЬ 2026 ГОДА
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
         const systemInstruction = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, глубокий, петербургский, без дешёвых маркетинговых манипуляций. Ты помогаешь продвигать авторские методики на стыке театра, режиссуры и бизнеса.";
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
