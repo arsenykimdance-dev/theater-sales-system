@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление продажами — Театр Земли & KIM.FILM</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { font-size: 24px; color: #1a1a1a; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .tab-btn.active { background: #333; color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button.action-btn { margin-top: 20px; background: #0066cc; color: #white; color: #fff; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button.action-btn:hover { background: #004999; }
+        .output-box { margin-top: 20px; background: #f9f9f9; border: 1px solid #ddd; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Панель управления продажами</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">1. Запуск продвижения</button>
+        <button class="tab-btn" onclick="switchTab(1)">2. Административная часть</button>
+    </div>
+
+    <!-- Вкладка 1 -->
+    <div class="tab-content active">
+        <h3>Создание стратегии продвижения курса</h3>
+        <label>Выберите курс:</label>
+        <select id="courseSelect">
+            <option value="nunchi-business">Нунчи для бизнеса</option>
+        </select>
+
+        <label>Дата начала продаж:</label>
+        <input type="date" id="startDate">
+
+        <label>Дата окончания:</label>
+        <input type="date" id="endDate">
+
+        <label>Желаемая итоговая сумма сбора (руб.):</label>
+        <input type="text" id="targetSum" placeholder="Например: 500000">
+
+        <button class="action-btn" onclick="generateCampaign()">Запустить создание стратегии</button>
+
+        <div class="output-box" id="campaignOutput">Здесь появится результат работы ИИ...</div>
+    </div>
+
+    <!-- Вкладка 2 -->
+    <div class="tab-content">
+        <h3>Администрирование и база знаний</h3>
+        <label>Опишите задачу для ИИ (например: «Обнови описание курса Нунчи» или «Создай новый курс»):</label>
+        <textarea id="adminTask" rows="5" placeholder="Введите ваш запрос здесь..."></textarea>
+
+        <button class="action-btn" onclick="processAdminTask()">Отправить задачу ИИ</button>
+
+        <div class="output-box" id="adminOutput">Здесь появится ответ ИИ...</div>
+    </div>
+</div>
+
+<script>
+    function switchTab(index) {
+        const buttons = document.querySelectorAll('.tab-btn');
+        const contents = document.querySelectorAll('.tab-content');
+        buttons.forEach((btn, i) => {
+            btn.classList.toggle('active', i === index);
+            contents[i].classList.toggle('active', i === index);
+        });
+    }
+
+    function generateCampaign() {
+        const course = document.getElementById('courseSelect').value;
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const sum = document.getElementById('targetSum').value;
+
+        if(!start || !end || !sum) {
+            alert('Пожалуйста, заполните все поля!');
+            return;
+        }
+
+        document.getElementById('campaignOutput').innerText = `ИИ анализирует курс "${course}"...\nЦель: собрать ${sum} руб. с ${start} по ${end}.\n\n(На следующем шаге мы подключим сюда реальный ИИ-ответ через API, а пока интерфейс готов!)`;
+    }
+
+    function processAdminTask() {
+        const task = document.getElementById('adminTask').value;
+        if(!task) {
+            alert('Введите текст задачи!');
+            return;
+        }
+        document.getElementById('adminOutput').innerText = `Задача принята: "${task}"\n\n(Скоро здесь ИИ будет сам обновлять файлы на GitHub!)`;
+    }
+</script>
+</body>
+</html>
