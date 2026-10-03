@@ -212,8 +212,8 @@
 
     // Инициализация при загрузке
     window.onload = () => {
-        if(!typeof CONFIG !== 'undefined') {
-            alert("Ошибка: файл config.js не найден!");
+        if(typeof CONFIG === 'undefined') {
+            alert("Ошибка: файл config.js не найден! Проверьте, загрузили ли вы его на GitHub.");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
