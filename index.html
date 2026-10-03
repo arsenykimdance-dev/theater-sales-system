@@ -27,6 +27,7 @@
         .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; white-space: pre-wrap; font-size: 14px; }
         .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
         .msg.model { background: #fff; align-self: flex-start; border: 1px solid #ccc; }
+        .msg.error-msg { background: #f8d7da; border: 1px solid #f5c2c7; color: #842029; }
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
@@ -113,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Вкладка 4: База проектов (ОБЛАЧНАЯ) -->
+    <!-- Вкладка 4: База проектов -->
     <div class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Облачная База Проектов (Синхронизация Google Таблиц)</h3>
@@ -153,11 +154,9 @@
 </div>
 
 <script>
-    // === ВСТАВЛЕННАЯ ССЫЛКА WEB APP ИЗ GOOGLE APPS SCRIPT ===
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
-    // ==============================================================
-
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+
     const SYSTEM_PROMPT_CONTENT = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, петербургский, без дешёвых маркетинговых манипуляций. Помогай продвигать методики на стыке театра и бизнеса.";
     const SYSTEM_PROMPT_SALES = "Ты — блестящий маркетолог, уверенный B2B-продажник и наставник. Задача — находить ЛПР. Выдавай конкретные должности, типы организаций, места поиска. Предлагай хитрые способы обхода секретарей с театральными метафорами. Мотивируй пользователя. Сохраняй петербургский тон.";
     const SYSTEM_PROMPT_ADMIN = "Ты — умный методист и редактор Театра Земли. Твоя задача — помогать улучшать описания проектов, придумывать новые идеи и глубоко анализировать контекстные ссылки. Помогай формулировать 'боли' аудитории и 'суть' проектов так, чтобы они звучали убедительно. Стиль: интеллигентный, петербургский.";
@@ -170,15 +169,9 @@
         document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
     }
 
-    // --- ОБЛАЧНАЯ БАЗА ПРОЕКТОВ ---
     let projectsDB = [];
 
     async function loadProjectsFromCloud() {
-        if(SCRIPT_URL === 'ВСТАВЬТЕ_ВАШУ_ССЫЛКУ_ИЗ_APPS_SCRIPT_СЮДА') {
-            document.getElementById('cloudLoadingIndicator').innerText = "ОШИБКА: Вы не вставили SCRIPT_URL в код сайта!";
-            return;
-        }
-
         document.getElementById('cloudLoadingIndicator').style.display = 'block';
         try {
             const response = await fetch(SCRIPT_URL);
@@ -213,9 +206,7 @@
                 method: 'POST',
                 body: JSON.stringify(proj)
             });
-            
             ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projArgument'].forEach(id => document.getElementById(id).value = '');
-            
             await loadProjectsFromCloud();
             alert("Проект успешно отправлен в облачную базу!");
         } catch(error) {
@@ -250,7 +241,6 @@
         return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nНаш аргумент: ${p.argument}\n`;
     }
 
-    // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
     function addLinkField() {
         const div = document.createElement('div');
         div.className = 'link-row';
@@ -269,7 +259,7 @@
         box.innerHTML = history.length === 0 ? '<div class="msg model">Жду ваших указаний.</div>' : '';
         history.forEach(msg => {
             const div = document.createElement('div');
-            div.className = `msg ${msg.role}`;
+            div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
             div.innerText = msg.parts[0].text;
             box.appendChild(div);
         });
@@ -347,7 +337,10 @@
             localStorage.setItem(storageKey, JSON.stringify(history));
             renderChatUI(storageKey, boxId);
         } catch (error) {
-            document.getElementById('loadingMsg').innerText = 'Ошибка: ' + error.message;
+            document.getElementById('loadingMsg').remove();
+            history.push({ role: 'model', isError: true, parts: [{ text: error.message }] });
+            localStorage.setItem(storageKey, JSON.stringify(history));
+            renderChatUI(storageKey, boxId);
         }
     }
 
@@ -373,7 +366,8 @@
             document.getElementById('imagePreviewContainer').innerHTML = `<img src="${imgUrl}" alt="Визуал">`;
             document.getElementById('artLoading').style.display = 'none';
         } catch(error) {
-            document.getElementById('artLoading').innerText = "Ошибка: " + error.message;
+            document.getElementById('artLoading').style.display = 'none';
+            document.getElementById('artPromptDisplay').innerText = error.message;
         }
     }
 
@@ -391,28 +385,59 @@
                         contents: contentsArray
                     })
                 });
+                
                 const data = await response.json();
-                if (data.error && data.error.code === 503) {
-                    if (attempt === maxRetries) throw new Error("Сервер перегружен. Включите VPN или подождите.");
-                    await new Promise(r => setTimeout(r, 2000));
-                    continue;
+
+                if (data.error) {
+                    const code = data.error.code;
+                    const msg = data.error.message || '';
+
+                    // 503: Перегрузка серверов — автоповтор
+                    if (code === 503) {
+                        if (attempt < maxRetries) {
+                            await new Promise(r => setTimeout(r, 2000));
+                            continue;
+                        }
+                        throw new Error("⚠️ Серверы Google временно перегружены (Ошибка 503). Пожалуйста, повторите запрос через 1–2 минуты.");
+                    }
+
+                    // 429: Исчерпан лимит запросов
+                    if (code === 429) {
+                        throw new Error("⚠️ Лимит бесплатных запросов на этом ключе исчерпан (Ошибка 429: квота Google на сегодня). Пожалуйста, вставьте запасной API-ключ в поле вверху страницы или подождите сброса лимита.");
+                    }
+
+                    // 400: Блокировка региона или ошибка запроса
+                    if (code === 400) {
+                        if (msg.includes("location is not supported")) {
+                            throw new Error("⚠️ Доступ заблокирован Google по геолокации. Пожалуйста, включите VPN в браузере и повторите отправку.");
+                        }
+                        throw new Error(`⚠️ Ошибка в параметрах запроса (Код 400): ${msg}`);
+                    }
+
+                    // 404: Модель не найдена
+                    if (code === 404) {
+                        throw new Error("⚠️ Модель ИИ не найдена (Ошибка 404). Проверьте адрес модели в настройках системы.");
+                    }
+
+                    throw new Error(`⚠️ Ошибка Google API (${code}): ${msg}`);
                 }
-                if (data.error && data.error.code === 400) {
-                     throw new Error("Ошибка 400. Скорее всего, недоступно в вашей стране. Пожалуйста, включите VPN.");
-                }
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
+
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
                     return data.candidates[0].content.parts[0].text;
                 }
-                throw new Error('Ошибка API: ' + JSON.stringify(data));
+                
+                throw new Error("⚠️ Ответ от нейросети получен в неожиданном формате.");
             } catch (error) {
-                if (attempt === maxRetries) throw error;
+                if (attempt === maxRetries || !error.message.includes("503")) {
+                    throw error;
+                }
             }
         }
     }
 
     window.onload = () => {
         addLinkField();
-        loadProjectsFromCloud(); // Загружаем базу проектов при старте
+        loadProjectsFromCloud();
         renderChatUI('theater_chat_history', 'chatBox');
         renderChatUI('theater_admin_chat_history', 'adminChatBox');
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
