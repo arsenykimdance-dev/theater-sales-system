@@ -23,7 +23,6 @@
         button.green-btn:hover { background: #218838; }
         .api-block { background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffeeba; }
         
-        /* Чат */
         .chat-box { height: 400px; overflow-y: auto; background: #e9ecef; border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
         .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; white-space: pre-wrap; font-size: 14px; }
         .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
@@ -31,11 +30,9 @@
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
-        /* Проекты */
         .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; }
         .project-card h4 { margin: 0 0 10px 0; color: #0066cc; }
         
-        /* Изображения */
         .image-preview { margin-top: 20px; text-align: center; }
         .image-preview img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     </style>
@@ -51,9 +48,9 @@
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
-        <button class="tab-btn" onclick="switchTab(1)">2. База знаний & Ссылки</button>
+        <button class="tab-btn" onclick="switchTab(1)">2. База знаний & Редактор</button>
         <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
-        <button class="tab-btn" onclick="switchTab(3)">4. База проектов</button>
+        <button class="tab-btn" onclick="switchTab(3)">4. Облачная База проектов</button>
         <button class="tab-btn" onclick="switchTab(4)">5. Визуал & Арт-дирекция</button>
     </div>
 
@@ -61,21 +58,12 @@
     <div class="tab-content active">
         <h3>Создание стратегии продвижения</h3>
         <label>Выберите проект из базы:</label>
-        <select id="courseSelect" class="dynamic-project-list"></select>
+        <select id="courseSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
 
         <div style="display: flex; gap: 10px;">
-            <div style="flex:1;">
-                <label>Начало продаж:</label>
-                <input type="date" id="startDate">
-            </div>
-            <div style="flex:1;">
-                <label>Окончание:</label>
-                <input type="date" id="endDate">
-            </div>
-            <div style="flex:1;">
-                <label>Цель сбора (руб):</label>
-                <input type="text" id="targetSum" placeholder="Например: 500000">
-            </div>
+            <div style="flex:1;"><label>Начало продаж:</label><input type="date" id="startDate"></div>
+            <div style="flex:1;"><label>Окончание:</label><input type="date" id="endDate"></div>
+            <div style="flex:1;"><label>Цель сбора (руб):</label><input type="text" id="targetSum" placeholder="Например: 500000"></div>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -90,18 +78,28 @@
         </div>
     </div>
 
-    <!-- Вкладка 2: База знаний -->
+    <!-- Вкладка 2: База знаний и Редактор -->
     <div class="tab-content">
-        <h3>Ссылки и контекст (применяются ко всем чатам)</h3>
+        <h3>ИИ-Методист и работа со ссылками</h3>
         <div id="linksContainer"></div>
         <button class="action-btn green-btn" onclick="addLinkField()">+ Добавить ссылку</button>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="action-btn danger-btn" onclick="clearChat('theater_admin_chat_history', 'adminChatBox', 'Чат редактора очищен. Чем могу помочь?')">Очистить чат редактора</button>
+        </div>
+
+        <div class="chat-box" id="adminChatBox"></div>
+        <div class="chat-input-area">
+            <textarea id="adminChatReply" rows="3" placeholder="Попросите улучшить описание проекта..."></textarea>
+            <button class="action-btn" style="margin-top:0;" onclick="sendAdminReply()">Отправить</button>
+        </div>
     </div>
 
     <!-- Вкладка 3: Продажи -->
     <div class="tab-content">
         <h3>Наставник по B2B продажам и ЛПР</h3>
         <label>Выберите проект из базы:</label>
-        <select id="partnerProjectSelect" class="dynamic-project-list"></select>
+        <select id="partnerProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
 
         <div style="display: flex; gap: 10px;">
             <button class="action-btn" onclick="startNewPartnerSearch()">Начать охоту за клиентами</button>
@@ -115,20 +113,25 @@
         </div>
     </div>
 
-    <!-- Вкладка 4: База проектов -->
+    <!-- Вкладка 4: База проектов (ОБЛАЧНАЯ) -->
     <div class="tab-content">
-        <h3>Управление проектами (Смысловая база)</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Облачная База Проектов (Синхронизация Google Таблиц)</h3>
+            <button class="action-btn" style="padding: 5px 10px; margin-top:0;" onclick="loadProjectsFromCloud()">Обновить базу</button>
+        </div>
+        
         <div style="background: #e9ecef; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
             <h4>Создать новый проект</h4>
-            <input type="text" id="projName" placeholder="Название проекта и ценовой сегмент (напр. Мастер-класс - Премиум)">
-            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора (Что это?)"></textarea>
-            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР (Кто платит?)"></textarea>
-            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории (Зачем им это?)"></textarea>
+            <input type="text" id="projName" placeholder="Название проекта и ценовой сегмент">
+            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
+            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
+            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории"></textarea>
             <input type="text" id="projFormat" placeholder="Формат (живой тренинг 2 дня, онлайн-курс)">
             <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли / Виталий Ким?)"></textarea>
-            <button class="action-btn green-btn" onclick="saveProject()">Сохранить проект в базу</button>
+            <button class="action-btn green-btn" id="saveProjBtn" onclick="saveProjectToCloud()">Отправить проект в облако</button>
         </div>
-        <h4>Сохраненные проекты:</h4>
+        <h4>Сохраненные проекты (из облака):</h4>
+        <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold;">Связь с сервером Google...</div>
         <div id="projectsList"></div>
     </div>
 
@@ -136,7 +139,7 @@
     <div class="tab-content">
         <h3>Арт-дирекция (Генерация атмосферного визуала)</h3>
         <label>Выберите проект из базы:</label>
-        <select id="artProjectSelect" class="dynamic-project-list"></select>
+        <select id="artProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
         
         <label>Дополнительные пожелания к картинке (опционально):</label>
         <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, сделай акцент на руках, стиль нуар...">
@@ -150,12 +153,14 @@
 </div>
 
 <script>
-    // --- ОБЩИЕ НАСТРОЙКИ ---
+    // === ВСТАВЛЕННАЯ ССЫЛКА WEB APP ИЗ GOOGLE APPS SCRIPT ===
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
+    // ==============================================================
+
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
-    
     const SYSTEM_PROMPT_CONTENT = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, петербургский, без дешёвых маркетинговых манипуляций. Помогай продвигать методики на стыке театра и бизнеса.";
-    
-    const SYSTEM_PROMPT_SALES = `Ты — блестящий маркетолог, уверенный B2B-продажник и наставник. Задача — находить ЛПР. Выдавай конкретные должности, типы организаций, места поиска (соцсети, клубы). Предлагай хитрые, партизанские способы обхода секретарей с театральными метафорами. Мотивируй пользователя. Сохраняй петербургский тон.`;
+    const SYSTEM_PROMPT_SALES = "Ты — блестящий маркетолог, уверенный B2B-продажник и наставник. Задача — находить ЛПР. Выдавай конкретные должности, типы организаций, места поиска. Предлагай хитрые способы обхода секретарей с театральными метафорами. Мотивируй пользователя. Сохраняй петербургский тон.";
+    const SYSTEM_PROMPT_ADMIN = "Ты — умный методист и редактор Театра Земли. Твоя задача — помогать улучшать описания проектов, придумывать новые идеи и глубоко анализировать контекстные ссылки. Помогай формулировать 'боли' аудитории и 'суть' проектов так, чтобы они звучали убедительно. Стиль: интеллигентный, петербургский.";
 
     document.getElementById('apiKey').value = localStorage.getItem('gemini_api_key') || '';
     document.getElementById('apiKey').addEventListener('input', (e) => localStorage.setItem('gemini_api_key', e.target.value));
@@ -165,13 +170,34 @@
         document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
     }
 
-    // --- БАЗА ПРОЕКТОВ (ВКЛАДКА 4) ---
-    let projectsDB = JSON.parse(localStorage.getItem('theater_projects_db')) || [];
+    // --- ОБЛАЧНАЯ БАЗА ПРОЕКТОВ ---
+    let projectsDB = [];
 
-    function saveProject() {
+    async function loadProjectsFromCloud() {
+        if(SCRIPT_URL === 'ВСТАВЬТЕ_ВАШУ_ССЫЛКУ_ИЗ_APPS_SCRIPT_СЮДА') {
+            document.getElementById('cloudLoadingIndicator').innerText = "ОШИБКА: Вы не вставили SCRIPT_URL в код сайта!";
+            return;
+        }
+
+        document.getElementById('cloudLoadingIndicator').style.display = 'block';
+        try {
+            const response = await fetch(SCRIPT_URL);
+            projectsDB = await response.json();
+            document.getElementById('cloudLoadingIndicator').style.display = 'none';
+            renderProjects();
+        } catch(error) {
+            document.getElementById('cloudLoadingIndicator').innerText = "Ошибка загрузки из облака: " + error.message;
+        }
+    }
+
+    async function saveProjectToCloud() {
         const name = document.getElementById('projName').value.trim();
         if(!name) { alert("Укажите хотя бы название проекта!"); return; }
         
+        const btn = document.getElementById('saveProjBtn');
+        btn.innerText = "Сохранение...";
+        btn.disabled = true;
+
         const proj = {
             id: Date.now(),
             name: name,
@@ -182,44 +208,39 @@
             argument: document.getElementById('projArgument').value
         };
         
-        projectsDB.push(proj);
-        localStorage.setItem('theater_projects_db', JSON.stringify(projectsDB));
-        
-        // Очистка формы
-        ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projArgument'].forEach(id => document.getElementById(id).value = '');
-        
-        renderProjects();
-        alert("Проект сохранен!");
-    }
-
-    function deleteProject(id) {
-        if(confirm("Удалить проект?")) {
-            projectsDB = projectsDB.filter(p => p.id !== id);
-            localStorage.setItem('theater_projects_db', JSON.stringify(projectsDB));
-            renderProjects();
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(proj)
+            });
+            
+            ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projArgument'].forEach(id => document.getElementById(id).value = '');
+            
+            await loadProjectsFromCloud();
+            alert("Проект успешно отправлен в облачную базу!");
+        } catch(error) {
+            alert("Ошибка сохранения: " + error.message);
+        } finally {
+            btn.innerText = "Отправить проект в облако";
+            btn.disabled = false;
         }
     }
 
     function renderProjects() {
-        // Отрисовка списка
         const list = document.getElementById('projectsList');
         list.innerHTML = '';
         projectsDB.forEach(p => {
             list.innerHTML += `<div class="project-card">
-                <div style="float:right;"><button class="danger-btn" style="color:white;border:none;padding:5px;border-radius:3px;cursor:pointer;" onclick="deleteProject(${p.id})">Удалить</button></div>
                 <h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
                 <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
             </div>`;
         });
 
-        // Обновление всех выпадающих списков
         const selects = document.querySelectorAll('.dynamic-project-list');
         selects.forEach(select => {
-            select.innerHTML = projectsDB.length === 0 ? '<option value="">Сначала создайте проект в Базе...</option>' : '';
-            projectsDB.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
+            select.innerHTML = projectsDB.length === 0 ? '<option value="">Нет проектов в облаке...</option>' : '';
+            projectsDB.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
         });
     }
 
@@ -229,7 +250,7 @@
         return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nНаш аргумент: ${p.argument}\n`;
     }
 
-    // --- ССЫЛКИ (ВКЛАДКА 2) ---
+    // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
     function addLinkField() {
         const div = document.createElement('div');
         div.className = 'link-row';
@@ -239,10 +260,9 @@
 
     function getLinksContext() {
         const links = Array.from(document.querySelectorAll('.context-link')).map(i => i.value.trim()).filter(v => v !== '');
-        return links.length > 0 ? "\nДОП. МАТЕРИАЛЫ (ССЫЛКИ):\n" + links.join("\n") : "";
+        return links.length > 0 ? "\nОБЯЗАТЕЛЬНЫЙ КОНТЕКСТ ИЗ ССЫЛОК:\n" + links.join("\n") : "";
     }
 
-    // --- ЧАТЫ (ВКЛАДКА 1 и 3) ---
     function renderChatUI(storageKey, boxId) {
         const history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
@@ -266,14 +286,23 @@
     async function sendReply(inputId, storageKey, boxId, systemPrompt) {
         const text = document.getElementById(inputId).value.trim();
         if(!text) return;
-        
         let history = JSON.parse(localStorage.getItem(storageKey)) || [];
         history.push({ role: 'user', parts: [{ text: text }] });
         localStorage.setItem(storageKey, JSON.stringify(history));
         document.getElementById(inputId).value = '';
-        
         renderChatUI(storageKey, boxId);
         await processTurn(storageKey, boxId, systemPrompt);
+    }
+
+    async function sendAdminReply() {
+        const text = document.getElementById('adminChatReply').value.trim();
+        if(!text) return;
+        let history = JSON.parse(localStorage.getItem('theater_admin_chat_history')) || [];
+        history.push({ role: 'user', parts: [{ text: text }] });
+        localStorage.setItem('theater_admin_chat_history', JSON.stringify(history));
+        document.getElementById('adminChatReply').value = '';
+        renderChatUI('theater_admin_chat_history', 'adminChatBox');
+        await processTurn('theater_admin_chat_history', 'adminChatBox', SYSTEM_PROMPT_ADMIN, getLinksContext());
     }
 
     function startNewCampaign() {
@@ -282,14 +311,7 @@
         const end = document.getElementById('endDate').value;
         const sum = document.getElementById('targetSum').value;
         if(!projId || !start || !end || !sum) { alert('Заполните все поля и выберите проект!'); return; }
-
-        const prompt = `${getProjectContext(projId)}\n${getLinksContext()}\nЗАДАЧА: Продвижение. Период: с ${start} по ${end}. Цель: ${sum} руб.
-ПРАВИЛО: Работаем в 3 шага.
-ШАГ 1: Дай только краткий концепт и расписание. Спроси, утверждаю ли я.
-ШАГ 2: (После моего "да") Пишем полные тексты.
-ШАГ 3: (В конце) Делаем резюме.
-Жду Шаг 1.`;
-
+        const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Продвижение. Период: с ${start} по ${end}. Цель: ${sum} руб.\nПРАВИЛО: Работаем в 3 шага.\nШАГ 1: Дай только краткий концепт и расписание. Спроси, утверждаю ли я.\nШАГ 2: (После моего "да") Пишем полные тексты.\nШАГ 3: (В конце) Делаем резюме.\nЖду Шаг 1.`;
         localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_chat_history', 'chatBox');
         processTurn('theater_chat_history', 'chatBox', SYSTEM_PROMPT_CONTENT);
@@ -298,20 +320,13 @@
     function startNewPartnerSearch() {
         const projId = document.getElementById('partnerProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
-
-        const prompt = `${getProjectContext(projId)}\n${getLinksContext()}\nЗАДАЧА: Поиск ЛПР и партнеров.
-Выдай конкретный план действий:
-1. Кто наши ЛПР (должности).
-2. Где их искать (агрегаторы, сферы).
-3. Дай 1-2 партизанских способа обойти секретаря.
-Спроси меня, что делаем дальше.`;
-
+        const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Поиск ЛПР и партнеров.\nВыдай конкретный план действий:\n1. Кто наши ЛПР (должности).\n2. Где их искать (агрегаторы, сферы).\n3. Дай 1-2 партизанских способа обойти секретаря.\nСпроси меня, что делаем дальше.`;
         localStorage.setItem('theater_partner_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
         processTurn('theater_partner_chat_history', 'partnerChatBox', SYSTEM_PROMPT_SALES);
     }
 
-    async function processTurn(storageKey, boxId, systemPrompt) {
+    async function processTurn(storageKey, boxId, systemPrompt, dynamicContext = "") {
         const apiKey = document.getElementById('apiKey').value.trim();
         if (!apiKey) { alert('Введите API-ключ вверху!'); return; }
         
@@ -320,8 +335,13 @@
         box.innerHTML += '<div class="msg model" id="loadingMsg">Печатаю...</div>';
         box.scrollTop = box.scrollHeight;
 
+        let apiHistory = JSON.parse(JSON.stringify(history));
+        if (dynamicContext && apiHistory.length > 0) {
+            apiHistory[apiHistory.length - 1].parts[0].text += "\n\n" + dynamicContext;
+        }
+
         try {
-            const responseText = await fetchGeminiAPI(apiKey, history, systemPrompt);
+            const responseText = await fetchGeminiAPI(apiKey, apiHistory, systemPrompt);
             document.getElementById('loadingMsg').remove();
             history.push({ role: 'model', parts: [{ text: responseText }] });
             localStorage.setItem(storageKey, JSON.stringify(history));
@@ -331,47 +351,32 @@
         }
     }
 
-    // --- ВИЗУАЛ (ВКЛАДКА 5) ---
     async function generateVisual() {
         const apiKey = document.getElementById('apiKey').value.trim();
         if (!apiKey) { alert('Введите API-ключ!'); return; }
-
         const projId = document.getElementById('artProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
-        
         const customReq = document.getElementById('artCustomRequest').value.trim();
         
         document.getElementById('artLoading').style.display = 'block';
         document.getElementById('imagePreviewContainer').innerHTML = '';
         document.getElementById('artPromptDisplay').innerText = '';
 
-        const artPrompt = `Ты — Арт-директор. Твоя единственная задача — написать 1 детальный промпт НА АНГЛИЙСКОМ ЯЗЫКЕ для нейросети, которая сгенерирует фото для этого проекта.
-${getProjectContext(projId)}
-Доп. пожелания: ${customReq}
-ПРАВИЛА:
-1. Выдай ТОЛЬКО английский текст промпта (без вступлений, без кавычек).
-2. Опиши атмосферу, свет (cinematic lighting), стиль (photorealistic), позы людей.`;
+        const artPrompt = `Ты — Арт-директор. Напиши 1 промпт НА АНГЛИЙСКОМ ЯЗЫКЕ для нейросети для этого проекта.\n${getProjectContext(projId)}\nПожелания: ${customReq}\nПРАВИЛА:\n1. Выдай ТОЛЬКО английский текст промпта.\n2. Опиши атмосферу, cinematic lighting, photorealistic.`;
 
         try {
-            // Сначала просим Gemini написать промпт на английском
             const engPrompt = await fetchGeminiAPI(apiKey, [{ role: 'user', parts: [{ text: artPrompt }] }], "You write only prompts for image generation.");
-            
             document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
-
-            // Отправляем английский промпт в бесплатный генератор (Pollinations)
-            const seed = Math.floor(Math.random() * 100000); // Чтобы картинки не кэшировались одинаковые
+            const seed = Math.floor(Math.random() * 100000);
             const encodedPrompt = encodeURIComponent(engPrompt);
             const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
-
-            document.getElementById('imagePreviewContainer').innerHTML = `<img src="${imgUrl}" alt="Сгенерированный визуал">`;
+            document.getElementById('imagePreviewContainer').innerHTML = `<img src="${imgUrl}" alt="Визуал">`;
             document.getElementById('artLoading').style.display = 'none';
-
         } catch(error) {
             document.getElementById('artLoading').innerText = "Ошибка: " + error.message;
         }
     }
 
-    // --- ОБЩЕЕ API ---
     async function fetchGeminiAPI(apiKey, contentsArray, activeSystemPrompt) {
         const maxRetries = 3;
         const url = `${MODEL_URL}?key=${apiKey}`;
@@ -405,11 +410,11 @@ ${getProjectContext(projId)}
         }
     }
 
-    // Запуск при старте
     window.onload = () => {
-        addLinkField(); // Добавим пустое поле ссылки по умолчанию
-        renderProjects();
+        addLinkField();
+        loadProjectsFromCloud(); // Загружаем базу проектов при старте
         renderChatUI('theater_chat_history', 'chatBox');
+        renderChatUI('theater_admin_chat_history', 'adminChatBox');
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
     };
 </script>
