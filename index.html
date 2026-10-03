@@ -96,7 +96,8 @@
 
         outputBox.innerText = 'ИИ думает, формирует стратегии...';
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        // ТОЧНО ПРАВИЛЬНАЯ ССЫЛКА БЕЗ 1.5
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
         const systemInstruction = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, глубокий, петербургский, без дешёвых маркетинговых манипуляций. Ты помогаешь продвигать авторские методики на стыке театра, режиссуры и бизнеса.";
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -117,18 +118,15 @@
 
                 const data = await response.json();
 
-                // Проверяем, есть ли ошибка 503
                 if (data.error && data.error.code === 503) {
                     if (attempt === maxRetries) throw new Error("Серверы перегружены. Пожалуйста, попробуйте через пару минут.");
-                    // Ждем 2 секунды перед повтором
                     await new Promise(r => setTimeout(r, 2000));
                     continue;
                 }
                 
-                // Если успешно
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     outputBox.innerText = data.candidates[0].content.parts[0].text;
-                    return; // Успех, выходим из цикла
+                    return; 
                 } else {
                     outputBox.innerText = 'Ошибка ответа ИИ: ' + JSON.stringify(data);
                     return;
