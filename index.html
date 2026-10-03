@@ -87,6 +87,7 @@
     async function callGemini(prompt, outputElementId) {
         const apiKey = document.getElementById('apiKey').value.trim();
         const outputBox = document.getElementById(outputElementId);
+        const maxRetries = 3;
 
         if (!apiKey) {
             alert('Пожалуйста, введите ваш API-ключ Gemini в поле сверху!');
@@ -95,31 +96,48 @@
 
         outputBox.innerText = 'ИИ думает, формирует стратегии...';
 
-        // ИСПРАВЛЕННАЯ СТРОКА: правильная модель (согласно опыту автопостинга)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
         const systemInstruction = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, глубокий, петербургский, без дешёвых маркетинговых манипуляций. Ты помогаешь продвигать авторские методики на стыке театра, режиссуры и бизнеса.";
 
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [
-                        { role: "user", parts: [{ text: systemInstruction + "\n\n" + prompt }] }
-                    ]
-                })
-            });
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                if (attempt > 1) {
+                    outputBox.innerText = `Сервер Google занят. Автоматическая попытка ${attempt} из ${maxRetries}...`;
+                }
 
-            const data = await response.json();
-            
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                outputBox.innerText = data.candidates[0].content.parts[0].text;
-            } else {
-                outputBox.innerText = 'Ошибка ответа ИИ: ' + JSON.stringify(data);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            { role: "user", parts: [{ text: systemInstruction + "\n\n" + prompt }] }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+
+                // Проверяем, есть ли ошибка 503
+                if (data.error && data.error.code === 503) {
+                    if (attempt === maxRetries) throw new Error("Серверы перегружены. Пожалуйста, попробуйте через пару минут.");
+                    // Ждем 2 секунды перед повтором
+                    await new Promise(r => setTimeout(r, 2000));
+                    continue;
+                }
+                
+                // Если успешно
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    outputBox.innerText = data.candidates[0].content.parts[0].text;
+                    return; // Успех, выходим из цикла
+                } else {
+                    outputBox.innerText = 'Ошибка ответа ИИ: ' + JSON.stringify(data);
+                    return;
+                }
+            } catch (error) {
+                if (attempt === maxRetries) {
+                    outputBox.innerText = 'Ошибка соединения: ' + error.message;
+                }
             }
-        } catch (error) {
-            outputBox.innerText = 'Ошибка соединения: ' + error.message;
         }
     }
 
