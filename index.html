@@ -6,22 +6,24 @@
     <title>Управление продажами — Театр Земли & KIM.FILM</title>
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h1 { font-size: 24px; color: #1a1a1a; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; }
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 20px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; }
+        .tab-btn { padding: 10px 15px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 13px; }
         .tab-btn.active { background: #333; color: #fff; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
         button.action-btn { margin-top: 15px; background: #0066cc; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
         button.action-btn:hover { background: #004999; }
         button.danger-btn { background: #cc0000; }
         button.danger-btn:hover { background: #990000; }
+        button.green-btn { background: #28a745; }
+        button.green-btn:hover { background: #218838; }
         .api-block { background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffeeba; }
         
-        /* Стили для чата */
+        /* Чат */
         .chat-box { height: 400px; overflow-y: auto; background: #e9ecef; border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
         .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; white-space: pre-wrap; font-size: 14px; }
         .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
@@ -29,9 +31,13 @@
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
-        /* Стили для ссылок */
-        .link-row { display: flex; gap: 10px; margin-top: 5px; }
-        .link-row button { margin-top: 5px; padding: 0 15px; background: #666; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        /* Проекты */
+        .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; }
+        .project-card h4 { margin: 0 0 10px 0; color: #0066cc; }
+        
+        /* Изображения */
+        .image-preview { margin-top: 20px; text-align: center; }
+        .image-preview img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -40,92 +46,106 @@
     
     <div class="api-block">
         <label>Введите ваш API-ключ Gemini:</label>
-        <input type="password" id="apiKey" placeholder="Вставьте ключ сюда (сохранится в вашем браузере)">
+        <input type="password" id="apiKey" placeholder="Вставьте ключ (сохранится в браузере)">
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab(0)">1. Продвижение (Контент)</button>
-        <button class="tab-btn" onclick="switchTab(1)">2. База знаний и ссылки</button>
-        <button class="tab-btn" onclick="switchTab(2)">3. Поиск партнеров и продажник</button>
+        <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
+        <button class="tab-btn" onclick="switchTab(1)">2. База знаний & Ссылки</button>
+        <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
+        <button class="tab-btn" onclick="switchTab(3)">4. База проектов</button>
+        <button class="tab-btn" onclick="switchTab(4)">5. Визуал & Арт-дирекция</button>
     </div>
 
-    <!-- Вкладка 1: Чат контент-стратегии -->
+    <!-- Вкладка 1: Продвижение -->
     <div class="tab-content active">
-        <h3>Создание стратегии продвижения курса</h3>
-        <label>Выберите курс:</label>
-        <select id="courseSelect">
-            <option value="Нунчи для бизнеса (Премиум)">Нунчи для бизнеса (Премиум)</option>
-            <option value="Нейкрокинестетическая мистификация (Лекции)">Нейкрокинестетическая мистификация (Лекции)</option>
-            <option value="Мастер-класс: Режиссура и биомеханика">Мастер-класс: Режиссура и биомеханика</option>
-        </select>
+        <h3>Создание стратегии продвижения</h3>
+        <label>Выберите проект из базы:</label>
+        <select id="courseSelect" class="dynamic-project-list"></select>
 
-        <label>Дата начала продаж:</label>
-        <input type="date" id="startDate">
-
-        <label>Дата окончания:</label>
-        <input type="date" id="endDate">
-
-        <label>Желаемая итоговая сумма сбора (руб.):</label>
-        <input type="text" id="targetSum" placeholder="Например: 500000">
+        <div style="display: flex; gap: 10px;">
+            <div style="flex:1;">
+                <label>Начало продаж:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div style="flex:1;">
+                <label>Окончание:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div style="flex:1;">
+                <label>Цель сбора (руб):</label>
+                <input type="text" id="targetSum" placeholder="Например: 500000">
+            </div>
+        </div>
 
         <div style="display: flex; gap: 10px;">
             <button class="action-btn" onclick="startNewCampaign()">Начать новую стратегию</button>
-            <button class="action-btn danger-btn" onclick="clearChat()">Очистить историю чата</button>
+            <button class="action-btn danger-btn" onclick="clearChat('theater_chat_history', 'chatBox', 'Чат контента очищен.')">Очистить историю</button>
         </div>
 
-        <div class="chat-box" id="chatBox">
-            <div class="msg model">Добро пожаловать. Заполните параметры выше и нажмите «Начать новую стратегию», либо продолжайте текущий диалог.</div>
-        </div>
-        
+        <div class="chat-box" id="chatBox"></div>
         <div class="chat-input-area">
-            <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ (например: 'План отличный, давай переходить к шагу 2')..."></textarea>
-            <button class="action-btn" style="margin-top:0;" onclick="sendReply()">Отправить<br>ответ</button>
+            <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ..."></textarea>
+            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', SYSTEM_PROMPT_CONTENT)">Отправить</button>
         </div>
     </div>
 
-    <!-- Вкладка 2: Административная часть -->
+    <!-- Вкладка 2: База знаний -->
     <div class="tab-content">
-        <h3>Администрирование и база знаний</h3>
-        
-        <label>Дополнительный контекст (Ссылки на материалы):</label>
-        <div id="linksContainer">
-            <div class="link-row">
-                <input type="url" class="context-link" placeholder="https://vitaly.kim/..." >
-            </div>
-        </div>
-        <button class="action-btn" style="background: #28a745; margin-top: 5px; padding: 5px 10px;" onclick="addLinkField()">+ Добавить ссылку</button>
-
-        <label>Опишите задачу для ИИ:</label>
-        <textarea id="adminTask" rows="5" placeholder="Например: Предложи изменения для курса Нунчи, опираясь на ссылки выше..."></textarea>
-
-        <button class="action-btn" onclick="processAdminTask()">Отправить задачу ИИ</button>
-
-        <div class="chat-box" id="adminOutput" style="height: auto; min-height: 100px;">Здесь появится ответ ИИ...</div>
+        <h3>Ссылки и контекст (применяются ко всем чатам)</h3>
+        <div id="linksContainer"></div>
+        <button class="action-btn green-btn" onclick="addLinkField()">+ Добавить ссылку</button>
     </div>
 
-    <!-- Вкладка 3: Поиск партнеров и продажник (НОВОЕ) -->
+    <!-- Вкладка 3: Продажи -->
     <div class="tab-content">
-        <h3>Наставник по продажам и поиску партнеров</h3>
-        <label>Для какого проекта ищем ЛПР (Лиц, принимающих решения):</label>
-        <select id="partnerProjectSelect">
-            <option value="Нунчи для бизнес-команд (B2B, высокий чек)">Нунчи для бизнес-команд (B2B, высокий чек)</option>
-            <option value="Корпоративные консультации от режиссера">Корпоративные консультации от режиссера</option>
-            <option value="Спонсорство спектаклей Театра Земли">Спонсорство спектаклей Театра Земли</option>
-        </select>
+        <h3>Наставник по B2B продажам и ЛПР</h3>
+        <label>Выберите проект из базы:</label>
+        <select id="partnerProjectSelect" class="dynamic-project-list"></select>
 
         <div style="display: flex; gap: 10px;">
             <button class="action-btn" onclick="startNewPartnerSearch()">Начать охоту за клиентами</button>
-            <button class="action-btn danger-btn" onclick="clearPartnerChat()">Очистить чат продажника</button>
+            <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат маркетолога очищен.')">Очистить чат</button>
         </div>
 
-        <div class="chat-box" id="partnerChatBox">
-            <div class="msg model">Приветствую! Я ваш старший партнер, наставник и маркетолог. Выбирайте проект, и мы найдем для него лучших клиентов. Мы не ограничиваемся поиском в Гугле — мы берем хитростью, логикой и точечными касаниями. У нас всё получится!</div>
-        </div>
-        
+        <div class="chat-box" id="partnerChatBox"></div>
         <div class="chat-input-area">
-            <textarea id="partnerChatReply" rows="3" placeholder="Задайте мне вопрос (например: 'Как мне выйти на HR-директоров IT-компаний минуя их секретарей?')..."></textarea>
-            <button class="action-btn" style="margin-top:0; background: #28a745;" onclick="sendPartnerReply()">Отправить<br>ответ</button>
+            <textarea id="partnerChatReply" rows="3" placeholder="Задайте вопрос маркетологу..."></textarea>
+            <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', SYSTEM_PROMPT_SALES)">Отправить</button>
         </div>
+    </div>
+
+    <!-- Вкладка 4: База проектов -->
+    <div class="tab-content">
+        <h3>Управление проектами (Смысловая база)</h3>
+        <div style="background: #e9ecef; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <h4>Создать новый проект</h4>
+            <input type="text" id="projName" placeholder="Название проекта и ценовой сегмент (напр. Мастер-класс - Премиум)">
+            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора (Что это?)"></textarea>
+            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР (Кто платит?)"></textarea>
+            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории (Зачем им это?)"></textarea>
+            <input type="text" id="projFormat" placeholder="Формат (живой тренинг 2 дня, онлайн-курс)">
+            <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли / Виталий Ким?)"></textarea>
+            <button class="action-btn green-btn" onclick="saveProject()">Сохранить проект в базу</button>
+        </div>
+        <h4>Сохраненные проекты:</h4>
+        <div id="projectsList"></div>
+    </div>
+
+    <!-- Вкладка 5: Визуал -->
+    <div class="tab-content">
+        <h3>Арт-дирекция (Генерация атмосферного визуала)</h3>
+        <label>Выберите проект из базы:</label>
+        <select id="artProjectSelect" class="dynamic-project-list"></select>
+        
+        <label>Дополнительные пожелания к картинке (опционально):</label>
+        <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, сделай акцент на руках, стиль нуар...">
+
+        <button class="action-btn" onclick="generateVisual()">Создать визуал через ИИ</button>
+        
+        <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует кадр...</div>
+        <div class="image-preview" id="imagePreviewContainer"></div>
+        <div id="artPromptDisplay" style="margin-top:15px; font-size:12px; color:#666; font-family:monospace;"></div>
     </div>
 </div>
 
@@ -133,42 +153,101 @@
     // --- ОБЩИЕ НАСТРОЙКИ ---
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
     
-    // Промпт для 1 и 2 вкладки (Контент-мейкер)
-    const SYSTEM_PROMPT_CONTENT = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, петербургский, без дешёвых маркетинговых манипуляций и нецензурной лексики. Ты помогаешь продвигать авторские методики на стыке театра, режиссуры и бизнеса.";
+    const SYSTEM_PROMPT_CONTENT = "Ты — интеллигентный и опытный помощник режиссера. Твой тон общения — уважительный, петербургский, без дешёвых маркетинговых манипуляций. Помогай продвигать методики на стыке театра и бизнеса.";
     
-    // Промпт для 3 вкладки (Маркетолог-наставник)
-    const SYSTEM_PROMPT_SALES = `Ты — блестящий маркетолог, взрослый и уверенный в себе B2B-продажник, и дружеский наставник для сотрудницы Виталия Кима (мыслящего режиссера, хореографа). Твоя задача — помочь находить реальных клиентов и партнеров.
-    ПРАВИЛА:
-    1. Будь максимально конкретен: выдавай названия должностей (напр., Head of T&D, HRD, Event-директор), типы организаций (IT-интеграторы, частные клубы), и реальные идеи, где достать их контакты (LinkedIn, профильные ТГ-чаты, бизнес-завтраки, агрегаторы).
-    2. Включай хитрость и нестандартные ходы. Не давай банальных советов вроде "настройте таргет". Предлагай партизанские выходы на ЛПР (минуя секретарей), нестандартные письма-заходы с театральными метафорами.
-    3. Постоянно мотивируй пользователя. Общайся как старший, уверенный друг. Говори: "Мы точно возьмем эту высоту", "Отличная мысль, давай докрутим".
-    4. Сохраняй интеллигентный петербургский тон, никакого мата и дешевой суеты, но проявляй акулью хватку в бизнесе.`;
-    
+    const SYSTEM_PROMPT_SALES = `Ты — блестящий маркетолог, уверенный B2B-продажник и наставник. Задача — находить ЛПР. Выдавай конкретные должности, типы организаций, места поиска (соцсети, клубы). Предлагай хитрые, партизанские способы обхода секретарей с театральными метафорами. Мотивируй пользователя. Сохраняй петербургский тон.`;
+
     document.getElementById('apiKey').value = localStorage.getItem('gemini_api_key') || '';
-    document.getElementById('apiKey').addEventListener('input', (e) => {
-        localStorage.setItem('gemini_api_key', e.target.value);
-    });
+    document.getElementById('apiKey').addEventListener('input', (e) => localStorage.setItem('gemini_api_key', e.target.value));
 
     function switchTab(index) {
-        const buttons = document.querySelectorAll('.tab-btn');
-        const contents = document.querySelectorAll('.tab-content');
-        buttons.forEach((btn, i) => {
-            btn.classList.toggle('active', i === index);
-            contents[i].classList.toggle('active', i === index);
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
+        document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
+    }
+
+    // --- БАЗА ПРОЕКТОВ (ВКЛАДКА 4) ---
+    let projectsDB = JSON.parse(localStorage.getItem('theater_projects_db')) || [];
+
+    function saveProject() {
+        const name = document.getElementById('projName').value.trim();
+        if(!name) { alert("Укажите хотя бы название проекта!"); return; }
+        
+        const proj = {
+            id: Date.now(),
+            name: name,
+            essence: document.getElementById('projEssence').value,
+            audience: document.getElementById('projAudience').value,
+            pain: document.getElementById('projPain').value,
+            format: document.getElementById('projFormat').value,
+            argument: document.getElementById('projArgument').value
+        };
+        
+        projectsDB.push(proj);
+        localStorage.setItem('theater_projects_db', JSON.stringify(projectsDB));
+        
+        // Очистка формы
+        ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projArgument'].forEach(id => document.getElementById(id).value = '');
+        
+        renderProjects();
+        alert("Проект сохранен!");
+    }
+
+    function deleteProject(id) {
+        if(confirm("Удалить проект?")) {
+            projectsDB = projectsDB.filter(p => p.id !== id);
+            localStorage.setItem('theater_projects_db', JSON.stringify(projectsDB));
+            renderProjects();
+        }
+    }
+
+    function renderProjects() {
+        // Отрисовка списка
+        const list = document.getElementById('projectsList');
+        list.innerHTML = '';
+        projectsDB.forEach(p => {
+            list.innerHTML += `<div class="project-card">
+                <div style="float:right;"><button class="danger-btn" style="color:white;border:none;padding:5px;border-radius:3px;cursor:pointer;" onclick="deleteProject(${p.id})">Удалить</button></div>
+                <h4>${p.name}</h4>
+                <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
+                <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
+            </div>`;
+        });
+
+        // Обновление всех выпадающих списков
+        const selects = document.querySelectorAll('.dynamic-project-list');
+        selects.forEach(select => {
+            select.innerHTML = projectsDB.length === 0 ? '<option value="">Сначала создайте проект в Базе...</option>' : '';
+            projectsDB.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
         });
     }
 
-    // --- ЛОГИКА ВКЛАДКИ 1 (ЧАТ КОНТЕНТА) ---
-    let chatHistory = JSON.parse(localStorage.getItem('theater_chat_history')) || [];
-    window.onload = () => {
-        if (chatHistory.length > 0) renderChat();
-        if (partnerChatHistory.length > 0) renderPartnerChat();
-    };
+    function getProjectContext(projectId) {
+        const p = projectsDB.find(x => x.id == projectId);
+        if(!p) return "";
+        return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nНаш аргумент: ${p.argument}\n`;
+    }
 
-    function renderChat() {
-        const box = document.getElementById('chatBox');
-        box.innerHTML = '';
-        chatHistory.forEach(msg => {
+    // --- ССЫЛКИ (ВКЛАДКА 2) ---
+    function addLinkField() {
+        const div = document.createElement('div');
+        div.className = 'link-row';
+        div.innerHTML = `<input type="url" class="context-link" placeholder="https://..."><button type="button" class="danger-btn" onclick="this.parentElement.remove()">X</button>`;
+        document.getElementById('linksContainer').appendChild(div);
+    }
+
+    function getLinksContext() {
+        const links = Array.from(document.querySelectorAll('.context-link')).map(i => i.value.trim()).filter(v => v !== '');
+        return links.length > 0 ? "\nДОП. МАТЕРИАЛЫ (ССЫЛКИ):\n" + links.join("\n") : "";
+    }
+
+    // --- ЧАТЫ (ВКЛАДКА 1 и 3) ---
+    function renderChatUI(storageKey, boxId) {
+        const history = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const box = document.getElementById(boxId);
+        box.innerHTML = history.length === 0 ? '<div class="msg model">Жду ваших указаний.</div>' : '';
+        history.forEach(msg => {
             const div = document.createElement('div');
             div.className = `msg ${msg.role}`;
             div.innerText = msg.parts[0].text;
@@ -177,179 +256,122 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    function clearChat() {
-        if(confirm('Точно очистить текущий диалог по контенту?')) {
-            chatHistory = [];
-            localStorage.removeItem('theater_chat_history');
-            document.getElementById('chatBox').innerHTML = '<div class="msg model">Чат очищен. Можно начинать новую стратегию.</div>';
+    function clearChat(storageKey, boxId, defaultText) {
+        if(confirm('Точно очистить чат?')) {
+            localStorage.removeItem(storageKey);
+            document.getElementById(boxId).innerHTML = `<div class="msg model">${defaultText}</div>`;
         }
     }
 
+    async function sendReply(inputId, storageKey, boxId, systemPrompt) {
+        const text = document.getElementById(inputId).value.trim();
+        if(!text) return;
+        
+        let history = JSON.parse(localStorage.getItem(storageKey)) || [];
+        history.push({ role: 'user', parts: [{ text: text }] });
+        localStorage.setItem(storageKey, JSON.stringify(history));
+        document.getElementById(inputId).value = '';
+        
+        renderChatUI(storageKey, boxId);
+        await processTurn(storageKey, boxId, systemPrompt);
+    }
+
     function startNewCampaign() {
-        const course = document.getElementById('courseSelect').value;
+        const projId = document.getElementById('courseSelect').value;
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
         const sum = document.getElementById('targetSum').value;
+        if(!projId || !start || !end || !sum) { alert('Заполните все поля и выберите проект!'); return; }
 
-        if(!start || !end || !sum) { alert('Пожалуйста, заполните все поля!'); return; }
+        const prompt = `${getProjectContext(projId)}\n${getLinksContext()}\nЗАДАЧА: Продвижение. Период: с ${start} по ${end}. Цель: ${sum} руб.
+ПРАВИЛО: Работаем в 3 шага.
+ШАГ 1: Дай только краткий концепт и расписание. Спроси, утверждаю ли я.
+ШАГ 2: (После моего "да") Пишем полные тексты.
+ШАГ 3: (В конце) Делаем резюме.
+Жду Шаг 1.`;
 
-        const prompt = `Нам нужно продвинуть курс: "${course}". Период продаж: с ${start} по ${end}. Целевая сумма: ${sum} рублей.
-ВАЖНОЕ ПРАВИЛО: Мы работаем строго в 3 шага.
-ШАГ 1: Сейчас ты предлагаешь ТОЛЬКО краткий концепт стратегии и расписание постов. Полные тексты пока не пиши. Спроси меня, утверждаю ли я концепт.
-ШАГ 2: (Только после моего утверждения) Мы совместно прописываем полные тексты постов.
-ШАГ 3: (Только после финализации текстов) Ты формируешь готовый итоговый документ (резюме).
-Жду твой Шаг 1.`;
-
-        chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
-        localStorage.setItem('theater_chat_history', JSON.stringify(chatHistory));
-        renderChat();
-        processChatTurn();
+        localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
+        renderChatUI('theater_chat_history', 'chatBox');
+        processTurn('theater_chat_history', 'chatBox', SYSTEM_PROMPT_CONTENT);
     }
 
-    function sendReply() {
-        const text = document.getElementById('chatReply').value.trim();
-        if(!text) return;
-        chatHistory.push({ role: 'user', parts: [{ text: text }] });
-        document.getElementById('chatReply').value = '';
-        localStorage.setItem('theater_chat_history', JSON.stringify(chatHistory));
-        renderChat();
-        processChatTurn();
+    function startNewPartnerSearch() {
+        const projId = document.getElementById('partnerProjectSelect').value;
+        if(!projId) { alert('Выберите проект!'); return; }
+
+        const prompt = `${getProjectContext(projId)}\n${getLinksContext()}\nЗАДАЧА: Поиск ЛПР и партнеров.
+Выдай конкретный план действий:
+1. Кто наши ЛПР (должности).
+2. Где их искать (агрегаторы, сферы).
+3. Дай 1-2 партизанских способа обойти секретаря.
+Спроси меня, что делаем дальше.`;
+
+        localStorage.setItem('theater_partner_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
+        renderChatUI('theater_partner_chat_history', 'partnerChatBox');
+        processTurn('theater_partner_chat_history', 'partnerChatBox', SYSTEM_PROMPT_SALES);
     }
 
-    async function processChatTurn() {
+    async function processTurn(storageKey, boxId, systemPrompt) {
         const apiKey = document.getElementById('apiKey').value.trim();
-        if (!apiKey) { alert('Введите API-ключ!'); return; }
-        const box = document.getElementById('chatBox');
+        if (!apiKey) { alert('Введите API-ключ вверху!'); return; }
         
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'msg model';
-        loadingDiv.innerText = 'ИИ печатает...';
-        loadingDiv.id = 'loadingMsg';
-        box.appendChild(loadingDiv);
+        let history = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const box = document.getElementById(boxId);
+        box.innerHTML += '<div class="msg model" id="loadingMsg">Печатаю...</div>';
         box.scrollTop = box.scrollHeight;
 
         try {
-            const responseText = await fetchGeminiAPI(apiKey, chatHistory, SYSTEM_PROMPT_CONTENT);
+            const responseText = await fetchGeminiAPI(apiKey, history, systemPrompt);
             document.getElementById('loadingMsg').remove();
-            chatHistory.push({ role: 'model', parts: [{ text: responseText }] });
-            localStorage.setItem('theater_chat_history', JSON.stringify(chatHistory));
-            renderChat();
+            history.push({ role: 'model', parts: [{ text: responseText }] });
+            localStorage.setItem(storageKey, JSON.stringify(history));
+            renderChatUI(storageKey, boxId);
         } catch (error) {
             document.getElementById('loadingMsg').innerText = 'Ошибка: ' + error.message;
         }
     }
 
-    // --- ЛОГИКА ВКЛАДКИ 3 (ЧАТ ПРОДАЖ И ПАРТНЕРОВ) ---
-    let partnerChatHistory = JSON.parse(localStorage.getItem('theater_partner_chat_history')) || [];
-
-    function renderPartnerChat() {
-        const box = document.getElementById('partnerChatBox');
-        box.innerHTML = '';
-        partnerChatHistory.forEach(msg => {
-            const div = document.createElement('div');
-            div.className = `msg ${msg.role}`;
-            div.innerText = msg.parts[0].text;
-            box.appendChild(div);
-        });
-        box.scrollTop = box.scrollHeight;
-    }
-
-    function clearPartnerChat() {
-        if(confirm('Точно очистить чат с маркетологом?')) {
-            partnerChatHistory = [];
-            localStorage.removeItem('theater_partner_chat_history');
-            document.getElementById('partnerChatBox').innerHTML = '<div class="msg model">Чат очищен. Выбирайте проект, и начнем охоту за клиентами!</div>';
-        }
-    }
-
-    function startNewPartnerSearch() {
-        const project = document.getElementById('partnerProjectSelect').value;
-        const prompt = `Мы начинаем поиск ЛПР и партнеров для проекта: "${project}". 
-Выдай мне стартовый, очень конкретный план действий:
-1. Кто наши идеальные ЛПР — конкретные должности.
-2. В каких местах/агрегаторах/сферах мы их сейчас будем искать.
-3. Предложи 1-2 нестандартных, хитрых способа обойти их секретарей прямо сегодня.
-Задай мне уточняющий вопрос, чтобы мы двинулись дальше!`;
-
-        partnerChatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
-        localStorage.setItem('theater_partner_chat_history', JSON.stringify(partnerChatHistory));
-        renderPartnerChat();
-        processPartnerChatTurn();
-    }
-
-    function sendPartnerReply() {
-        const text = document.getElementById('partnerChatReply').value.trim();
-        if(!text) return;
-        partnerChatHistory.push({ role: 'user', parts: [{ text: text }] });
-        document.getElementById('partnerChatReply').value = '';
-        localStorage.setItem('theater_partner_chat_history', JSON.stringify(partnerChatHistory));
-        renderPartnerChat();
-        processPartnerChatTurn();
-    }
-
-    async function processPartnerChatTurn() {
+    // --- ВИЗУАЛ (ВКЛАДКА 5) ---
+    async function generateVisual() {
         const apiKey = document.getElementById('apiKey').value.trim();
         if (!apiKey) { alert('Введите API-ключ!'); return; }
-        const box = document.getElementById('partnerChatBox');
+
+        const projId = document.getElementById('artProjectSelect').value;
+        if(!projId) { alert('Выберите проект!'); return; }
         
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'msg model';
-        loadingDiv.innerText = 'Маркетолог анализирует рынок...';
-        loadingDiv.id = 'partnerLoadingMsg';
-        box.appendChild(loadingDiv);
-        box.scrollTop = box.scrollHeight;
+        const customReq = document.getElementById('artCustomRequest').value.trim();
+        
+        document.getElementById('artLoading').style.display = 'block';
+        document.getElementById('imagePreviewContainer').innerHTML = '';
+        document.getElementById('artPromptDisplay').innerText = '';
+
+        const artPrompt = `Ты — Арт-директор. Твоя единственная задача — написать 1 детальный промпт НА АНГЛИЙСКОМ ЯЗЫКЕ для нейросети, которая сгенерирует фото для этого проекта.
+${getProjectContext(projId)}
+Доп. пожелания: ${customReq}
+ПРАВИЛА:
+1. Выдай ТОЛЬКО английский текст промпта (без вступлений, без кавычек).
+2. Опиши атмосферу, свет (cinematic lighting), стиль (photorealistic), позы людей.`;
 
         try {
-            // Передаем специфичный промпт для продажника
-            const responseText = await fetchGeminiAPI(apiKey, partnerChatHistory, SYSTEM_PROMPT_SALES);
-            document.getElementById('partnerLoadingMsg').remove();
-            partnerChatHistory.push({ role: 'model', parts: [{ text: responseText }] });
-            localStorage.setItem('theater_partner_chat_history', JSON.stringify(partnerChatHistory));
-            renderPartnerChat();
-        } catch (error) {
-            if (document.getElementById('partnerLoadingMsg')) {
-                document.getElementById('partnerLoadingMsg').innerText = 'Ошибка: ' + error.message;
-            }
+            // Сначала просим Gemini написать промпт на английском
+            const engPrompt = await fetchGeminiAPI(apiKey, [{ role: 'user', parts: [{ text: artPrompt }] }], "You write only prompts for image generation.");
+            
+            document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
+
+            // Отправляем английский промпт в бесплатный генератор (Pollinations)
+            const seed = Math.floor(Math.random() * 100000); // Чтобы картинки не кэшировались одинаковые
+            const encodedPrompt = encodeURIComponent(engPrompt);
+            const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
+
+            document.getElementById('imagePreviewContainer').innerHTML = `<img src="${imgUrl}" alt="Сгенерированный визуал">`;
+            document.getElementById('artLoading').style.display = 'none';
+
+        } catch(error) {
+            document.getElementById('artLoading').innerText = "Ошибка: " + error.message;
         }
     }
 
-    // --- ЛОГИКА ВКЛАДКИ 2 (АДМИНКА И ССЫЛКИ) ---
-    function addLinkField() {
-        const container = document.getElementById('linksContainer');
-        const div = document.createElement('div');
-        div.className = 'link-row';
-        div.innerHTML = `<input type="url" class="context-link" placeholder="https://..."><button type="button" class="danger-btn" onclick="this.parentElement.remove()">X</button>`;
-        container.appendChild(div);
-    }
-
-    async function processAdminTask() {
-        const task = document.getElementById('adminTask').value.trim();
-        const apiKey = document.getElementById('apiKey').value.trim();
-        const outputBox = document.getElementById('adminOutput');
-        
-        if(!task) { alert('Введите текст задачи!'); return; }
-        if(!apiKey) { alert('Введите API-ключ!'); return; }
-
-        const linkInputs = document.querySelectorAll('.context-link');
-        const links = Array.from(linkInputs).map(input => input.value.trim()).filter(val => val !== '');
-        
-        let finalPrompt = task;
-        if (links.length > 0) {
-            finalPrompt += "\n\nОбязательно используй информацию из этих источников (рассматривай ссылки как контекст):\n" + links.join("\n");
-        }
-
-        outputBox.innerHTML = '<div class="msg model">Анализирую задачу и ссылки...</div>';
-
-        try {
-            const singleHistory = [{ role: 'user', parts: [{ text: finalPrompt }] }];
-            const responseText = await fetchGeminiAPI(apiKey, singleHistory, SYSTEM_PROMPT_CONTENT);
-            outputBox.innerHTML = `<div class="msg model">${responseText}</div>`;
-        } catch (error) {
-            outputBox.innerHTML = `<div class="msg model" style="color:red;">Ошибка: ${error.message}</div>`;
-        }
-    }
-
-    // --- ОБЩАЯ ФУНКЦИЯ API ---
+    // --- ОБЩЕЕ API ---
     async function fetchGeminiAPI(apiKey, contentsArray, activeSystemPrompt) {
         const maxRetries = 3;
         const url = `${MODEL_URL}?key=${apiKey}`;
@@ -364,25 +386,32 @@
                         contents: contentsArray
                     })
                 });
-
                 const data = await response.json();
-
                 if (data.error && data.error.code === 503) {
-                    if (attempt === maxRetries) throw new Error("Серверы Google перегружены. Попробуйте через пару минут.");
+                    if (attempt === maxRetries) throw new Error("Сервер перегружен. Включите VPN или подождите.");
                     await new Promise(r => setTimeout(r, 2000));
                     continue;
                 }
-                
+                if (data.error && data.error.code === 400) {
+                     throw new Error("Ошибка 400. Скорее всего, недоступно в вашей стране. Пожалуйста, включите VPN.");
+                }
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     return data.candidates[0].content.parts[0].text;
-                } else {
-                    throw new Error('Некорректный ответ ИИ: ' + JSON.stringify(data));
                 }
+                throw new Error('Ошибка API: ' + JSON.stringify(data));
             } catch (error) {
                 if (attempt === maxRetries) throw error;
             }
         }
     }
+
+    // Запуск при старте
+    window.onload = () => {
+        addLinkField(); // Добавим пустое поле ссылки по умолчанию
+        renderProjects();
+        renderChatUI('theater_chat_history', 'chatBox');
+        renderChatUI('theater_partner_chat_history', 'partnerChatBox');
+    };
 </script>
 </body>
 </html>
