@@ -83,10 +83,12 @@
         <label>Выберите проект из базы:</label>
         <select id="courseSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
 
-        <div style="display: flex; gap: 10px;">
-            <div style="flex:1;"><label>Начало продаж:</label><input type="date" id="startDate"></div>
-            <div style="flex:1;"><label>Окончание:</label><input type="date" id="endDate"></div>
-            <div style="flex:1;"><label>Цель сбора (руб):</label><input type="text" id="targetSum" placeholder="Например: 500000"></div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+            <div style="flex:1; min-width: 140px;"><label>Начало рекламы:</label><input type="date" id="promoStart"></div>
+            <div style="flex:1; min-width: 140px;"><label>Старт проекта (сбора):</label><input type="date" id="startDate"></div>
+            <div style="flex:1; min-width: 140px;"><label>Окончание сбора:</label><input type="date" id="endDate"></div>
+            <div style="flex:1; min-width: 140px;"><label>Конец постэффекта:</label><input type="date" id="postEnd"></div>
+            <div style="flex:1; min-width: 140px;"><label>Цель (руб):</label><input type="text" id="targetSum" placeholder="Например: 500000"></div>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -97,7 +99,8 @@
         <div class="chat-box" id="chatBox"></div>
         <div class="chat-input-area">
             <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ..."></textarea>
-            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_CONTENT)">Отправить</button>
+            <!-- Обновлено: теперь обычные реплаи в этой вкладке тоже уходят Продюсеру (PROMPT_ADMIN) -->
+            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
         </div>
     </div>
 
@@ -354,14 +357,27 @@
 
     function startNewCampaign() {
         const projId = document.getElementById('courseSelect').value;
+        const promoStart = document.getElementById('promoStart').value;
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
+        const postEnd = document.getElementById('postEnd').value;
         const sum = document.getElementById('targetSum').value;
-        if(!projId || !start || !end || !sum) { alert('Заполните все поля и выберите проект!'); return; }
-        const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Продвижение. Период: с ${start} по ${end}. Цель: ${sum} руб.\nПРАВИЛО: Работаем в 3 шага.\nШАГ 1: Дай только краткий концепт и расписание. Спроси, утверждаю ли я.\nШАГ 2: (После моего "да") Пишем полные тексты.\nШАГ 3: (В конце) Делаем резюме.\nЖду Шаг 1.`;
+        
+        if(!projId || !start || !end || !sum) { alert('Пожалуйста, заполните основные даты, сумму и выберите проект!'); return; }
+        
+        const prompt = `${getProjectContext(projId)}
+ВВОДНЫЕ ДАННЫЕ ОТ АВТОРА:
+- Период рекламы и прогрева: с ${promoStart || 'не указано'} по ${start}
+- Сроки активного сбора: с ${start} по ${end}
+- Период постэффекта (работа с аудиторией после): до ${postEnd || 'не указано'}
+- Финансовая цель: ${sum} руб.
+
+Прочитай эти данные и начинай работу с ЭТАПА 1.`;
+        
         localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_chat_history', 'chatBox');
-        processTurn('theater_chat_history', 'chatBox', PROMPT_CONTENT);
+        // Обращаемся к промпту Продюсера
+        processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN); 
     }
 
     function startNewPartnerSearch() {
