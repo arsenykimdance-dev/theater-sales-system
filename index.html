@@ -13,7 +13,14 @@
     
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+        .app-layout { max-width: 1380px; margin: 0 auto; display: flex; gap: 20px; align-items: flex-start; }
+        .main-column { flex: 1; min-width: 0; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+        .sidebar-column { width: 380px; flex-shrink: 0; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: sticky; top: 20px; max-height: calc(100vh - 80px); overflow-y: auto; }
+        
+        @media (max-width: 1024px) {
+            .app-layout { flex-direction: column; }
+            .sidebar-column { width: 100%; position: static; max-height: none; }
+        }
         
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
@@ -24,29 +31,52 @@
         .key-status.warning { background: #fff2cc; color: #7f6000; border-color: #ffe699; }
         .key-status.error { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
 
-        h1 { font-size: 24px; color: #1a1a1a; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 0; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 15px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 13px; }
+        h1 { font-size: 22px; color: #1a1a1a; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 0; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 9px 13px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 13px; }
         .tab-btn.active { background: #333; color: #fff; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
-        input[type="text"], input[type="date"], input[type="url"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
-        button.action-btn { margin-top: 15px; background: #0066cc; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 13px; }
+        input[type="text"], input[type="date"], input[type="url"], select, textarea { width: 100%; padding: 9px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 13px; }
+        
+        button.action-btn { margin-top: 12px; background: #0066cc; color: #fff; padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
         button.action-btn:hover { background: #004999; }
         button.danger-btn { background: #cc0000; }
+        button.danger-btn:hover { background: #a00000; }
         button.green-btn { background: #28a745; }
+        button.green-btn:hover { background: #218838; }
+        button.purple-btn { background: #6f42c1; }
+        button.purple-btn:hover { background: #5a32a3; }
         
-        .chat-box { height: 400px; overflow-y: auto; background: #e9ecef; border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; font-size: 14px; } 
-        .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; white-space: pre-wrap; } 
-        .msg.model { background: #fff; align-self: flex-start; border: 1px solid #ccc; }
+        .chat-box { height: 420px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 18px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 12px 14px; border-radius: 8px; max-width: 88%; line-height: 1.5; font-size: 14px; position: relative; } 
+        .msg.user { background: #e7f1ff; align-self: flex-end; border: 1px solid #cfe2ff; white-space: pre-wrap; color: #084298; } 
+        .msg.model { background: #fff; align-self: flex-start; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .msg.error-msg { background: #f8d7da; border: 1px solid #f5c2c7; color: #842029; }
-        .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
-        .chat-input-area textarea { flex-grow: 1; resize: none; }
         
-        .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; position: relative; }
-        .project-card h4 { margin: 0 170px 10px 0; color: #0066cc; } 
+        .copy-btn { position: absolute; top: 6px; right: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 7px; font-size: 11px; cursor: pointer; color: #475569; }
+        .copy-btn:hover { background: #e2e8f0; }
+
+        .quick-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .chip { background: #e9ecef; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; color: #495057; transition: background 0.15s; }
+        .chip:hover { background: #dee2e6; color: #000; }
+
+        .chat-input-area { display: flex; gap: 10px; margin-top: 8px; }
+        .chat-input-area textarea { flex-grow: 1; resize: none; font-size: 13px; }
+        
+        .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px; margin-top: 10px; border-radius: 6px; position: relative; }
+        .project-card h4 { margin: 0 170px 8px 0; color: #0066cc; font-size: 15px; } 
+        
+        .event-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-left: 4px solid #0066cc; padding: 12px; margin-bottom: 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; }
+        .event-card.phase-promo { border-left-color: #fd7e14; }
+        .event-card.phase-active { border-left-color: #28a745; }
+        .event-card.phase-post { border-left-color: #6f42c1; }
+        .event-card.phase-done { border-left-color: #6c757d; }
+        .event-card h5 { margin: 0 45px 5px 0; font-size: 14px; color: #1e293b; }
+        .event-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 6px; }
+        .badge-author { background: #e0f2fe; color: #0369a1; }
+        .timeline-text { font-size: 12px; color: #475569; font-weight: 500; margin: 4px 0; }
         
         .image-preview { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
         .image-preview img { border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: cover; }
@@ -64,149 +94,186 @@
     </div>
 </div>
 
-<div class="container" id="mainApp" style="display: none;">
-    <h1>Панель управления продажами</h1>
-    <div id="keyStatusBadge" class="key-status">Загрузка ключей...</div>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
-        <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
-        <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
-        <button class="tab-btn" onclick="switchTab(3)">4. Визуал & Арт-дирекция</button>
-        <button class="tab-btn" style="background:transparent; color:#666; text-decoration:underline;" onclick="logout()">Выход</button>
-    </div>
-
-    <!-- Вкладка 1: Продвижение -->
-    <div class="tab-content active">
-        <h3>Создание стратегии продвижения</h3>
-        <label>Выберите проект из базы:</label>
-        <select id="courseSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
-
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-            <div style="flex:1; min-width: 140px;"><label>Начало рекламы:</label><input type="date" id="promoStart"></div>
-            <div style="flex:1; min-width: 140px;"><label>Старт проекта (сбора):</label><input type="date" id="startDate"></div>
-            <div style="flex:1; min-width: 140px;"><label>Окончание сбора:</label><input type="date" id="endDate"></div>
-            <div style="flex:1; min-width: 140px;"><label>Конец постэффекта:</label><input type="date" id="postEnd"></div>
-            <div style="flex:1; min-width: 140px;"><label>Цель (руб):</label><input type="text" id="targetSum" placeholder="Например: 500000"></div>
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-            <button class="action-btn" onclick="startNewCampaign()">Начать новую стратегию</button>
-            <button class="action-btn danger-btn" onclick="clearChat('theater_chat_history', 'chatBox', 'Чат контента очищен.')">Очистить историю</button>
-        </div>
-
-        <div class="chat-box" id="chatBox"></div>
-        <div class="chat-input-area">
-            <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ..."></textarea>
-            <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
-        </div>
-    </div>
-
-    <!-- Вкладка 2: База проектов и ИИ-Сборщик -->
-    <div class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Облачная База Проектов</h3>
-            <button class="action-btn" style="padding: 5px 10px; margin-top:0;" onclick="loadProjectsFromCloud()">Обновить базу</button>
-        </div>
-        
-        <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold; margin-bottom: 15px;">Связь с сервером Google...</div>
-        <div id="projectsList" style="margin-bottom: 30px;"></div>
-
-        <div style="background: #e9ecef; padding: 15px; border-radius: 4px; border: 1px solid #ccc;">
-            <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект вручную</h4>
-            <input type="text" id="projName" placeholder="Название проекта">
-            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
-            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
-            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории"></textarea>
-            
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1;"><input type="text" id="projFormat" placeholder="Формат (например: онлайн-курс)"></div>
-                <div style="flex:1;"><input type="text" id="projCheck" placeholder="Средний чек (например: 5000 руб)"></div>
+<div class="app-layout" id="mainApp" style="display: none;">
+    <!-- Левая колонка: Основные инструменты и чаты -->
+    <div class="main-column">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 15px;">
+            <h1 style="border:none; margin:0; padding:0;">Управление продажами & AI</h1>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span id="userBadge" style="font-size:12px; font-weight:bold; color:#0369a1; background:#e0f2fe; padding:4px 8px; border-radius:12px;">👤 Вход...</span>
+                <div id="keyStatusBadge" class="key-status" style="position:static;">Загрузка ключей...</div>
             </div>
-            
-            <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли?)"></textarea>
-            <button class="action-btn green-btn" style="width: 100%;" id="saveProjBtn" onclick="saveProjectToCloud()">Сохранить проект в облако</button>
-            
-            <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
+        </div>
 
-            <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов (Управление Базой)</h4>
-            <p style="font-size: 13px; color: #666; margin-top: 0;">Скажите боту "сохрани", "удали проект Х" или попросите помочь с текстом.</p>
-            
-            <div id="linksContainer"></div>
-            <button class="action-btn" style="background:#6c757d; padding: 5px 15px; font-size:12px;" onclick="addLinkField()">+ Добавить ссылку для контекста</button>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
+            <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
+            <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
+            <button class="tab-btn" onclick="switchTab(3)">4. Визуал & Арт-дирекция</button>
+            <button class="tab-btn" style="background:transparent; color:#666; text-decoration:underline;" onclick="logout()">Выход</button>
+        </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на готовом проекте.')">Очистить чат Сборщика</button>
+        <!-- Вкладка 1: Продвижение -->
+        <div class="tab-content active">
+            <h3>Создание стратегии продвижения</h3>
+            <label>Выберите проект из базы:</label>
+            <select id="courseSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex:1; min-width: 130px;"><label>Начало рекламы:</label><input type="date" id="promoStart"></div>
+                <div style="flex:1; min-width: 130px;"><label>Старт сбора:</label><input type="date" id="startDate"></div>
+                <div style="flex:1; min-width: 130px;"><label>Окончание сбора:</label><input type="date" id="endDate"></div>
+                <div style="flex:1; min-width: 130px;"><label>Конец постэффекта:</label><input type="date" id="postEnd"></div>
+                <div style="flex:1; min-width: 130px;"><label>Цель (руб):</label><input type="text" id="targetSum" placeholder="Например: 500000"></div>
             </div>
 
-            <div class="chat-box" style="height: 300px; background: #fff;" id="builderChatBox"></div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="action-btn" onclick="startNewCampaign()">Начать стратегию с ИИ</button>
+                <button class="action-btn purple-btn" onclick="createEventFromInputs()">📌 Создать событие в воронку</button>
+                <button class="action-btn danger-btn" onclick="clearChat('theater_chat_history', 'chatBox', 'Чат контента очищен.')">Очистить историю</button>
+            </div>
+
+            <div class="chat-box" id="chatBox"></div>
+            <div class="quick-chips">
+                <span class="chip" onclick="quickSend('chatReply', 'Попробуй еще раз и предложи другие варианты', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">🔄 Попробуй еще раз</span>
+                <span class="chip" onclick="quickSend('chatReply', 'Сделай короче и оставь только суть без вводных слов', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">✂️ Сделай короче</span>
+                <span class="chip" onclick="quickSend('chatReply', 'Напиши готовый текст первого поста прямо сейчас', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">📝 Напиши готовый пост</span>
+                <span class="chip" onclick="quickSend('chatReply', 'Принято, переходим к следующему шагу', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">💬 Следующий шаг</span>
+            </div>
             <div class="chat-input-area">
-                <textarea id="builderChatReply" rows="3" placeholder="Попросите бота сохранить, удалить или улучшить проект..."></textarea>
-                <button class="action-btn" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
+                <textarea id="chatReply" rows="2" placeholder="Напишите ответ ИИ..."></textarea>
+                <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
             </div>
+        </div>
+
+        <!-- Вкладка 2: База проектов и ИИ-Сборщик -->
+        <div class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Облачная База Проектов</h3>
+                <button class="action-btn" style="padding: 5px 10px; margin-top:0;" onclick="loadProjectsFromCloud()">Обновить базу</button>
+            </div>
+            
+            <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold; margin-bottom: 12px; font-size:13px;">Связь с сервером Google...</div>
+            <div id="projectsList" style="margin-bottom: 25px;"></div>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект вручную</h4>
+                <input type="text" id="projName" placeholder="Название проекта">
+                <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
+                <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
+                <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории"></textarea>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex:1;"><input type="text" id="projFormat" placeholder="Формат (например: онлайн-курс)"></div>
+                    <div style="flex:1;"><input type="text" id="projCheck" placeholder="Средний чек (например: 5000 руб)"></div>
+                </div>
+                
+                <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли?)"></textarea>
+                <button class="action-btn green-btn" style="width: 100%;" id="saveProjBtn" onclick="saveProjectToCloud()">Сохранить проект в облако</button>
+                
+                <hr style="border: 0; border-top: 1px solid #ddd; margin: 20px 0;">
+
+                <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов (Управление Базой)</h4>
+                <p style="font-size: 13px; color: #666; margin-top: 0;">Скажите боту «сохрани», «удали проект Х» или попросите упаковать идею по ссылкам.</p>
+                
+                <div id="linksContainer"></div>
+                <button class="action-btn" style="background:#6c757d; padding: 4px 12px; font-size:12px;" onclick="addLinkField()">+ Добавить ссылку для контекста</button>
+
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                    <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на проекте.')">Очистить чат Сборщика</button>
+                </div>
+
+                <div class="chat-box" style="height: 300px; background: #fff;" id="builderChatBox"></div>
+                <div class="quick-chips">
+                    <span class="chip" onclick="quickSend('builderChatReply', 'Сохрани этот проект в базу', 'theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER)">💾 Сохрани в базу</span>
+                    <span class="chip" onclick="quickSend('builderChatReply', 'Предложи более цепляющую суть и боли', 'theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER)">✨ Усиль боли и суть</span>
+                    <span class="chip" onclick="quickSend('builderChatReply', 'Сделай короче формулировки для карточки', 'theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER)">✂️ Сделай короче</span>
+                </div>
+                <div class="chat-input-area">
+                    <textarea id="builderChatReply" rows="2" placeholder="Попросите бота сохранить, удалить или улучшить проект..."></textarea>
+                    <button class="action-btn" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка 3: Продажи -->
+        <div class="tab-content">
+            <h3>Наставник по B2B продажам и ЛПР</h3>
+            <label>Выберите проект из базы:</label>
+            <select id="partnerProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" onclick="startNewPartnerSearch()">Начать охоту за клиентами</button>
+                <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат маркетолога очищен.')">Очистить чат</button>
+            </div>
+
+            <div class="chat-box" id="partnerChatBox"></div>
+            <div class="quick-chips">
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Напиши готовый холодный скрипт для первого сообщения', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">✉️ Напиши скрипт</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Предложи дерзкий способ обойти секретаря', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">🎭 Обход секретаря</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Клиент говорит что это дорого. Как закрыть возражение?', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">💰 Возражение: Дорого</span>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос маркетологу..."></textarea>
+                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">Отправить</button>
+            </div>
+        </div>
+
+        <!-- Вкладка 4: Визуал -->
+        <div class="tab-content">
+            <h3>Арт-дирекция (Генерация визуала)</h3>
+            <label>Выберите проект из базы:</label>
+            <select id="artProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 130px;">
+                    <label style="margin-top:0;">Стиль / Движок:</label>
+                    <select id="artModel">
+                        <option value="flux">Flux (Реализм, топ-качество)</option>
+                        <option value="turbo">Turbo (Быстрая генерация)</option>
+                        <option value="any-dark">AnyDark (Мрачный, нуарный)</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width: 130px;">
+                    <label style="margin-top:0;">Формат картинки:</label>
+                    <select id="artFormat">
+                        <option value="1024x1024">Квадрат (Пост)</option>
+                        <option value="768x1344">Вертикальный (Сторис/Reels)</option>
+                        <option value="1344x768">Горизонтальный (Обложка)</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width: 130px;">
+                    <label style="margin-top:0;">Количество:</label>
+                    <select id="artCount">
+                        <option value="1">1 вариант</option>
+                        <option value="2">2 варианта</option>
+                        <option value="4">4 варианта</option>
+                    </select>
+                </div>
+            </div>
+
+            <label>Дополнительные пожелания к картинке (опционально):</label>
+            <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, стиль нуар...">
+
+            <button class="action-btn" onclick="generateVisual()">Создать визуал через ИИ</button>
+            
+            <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует...</div>
+            
+            <div class="image-preview" id="imagePreviewContainer"></div>
+            <div id="artPromptDisplay" style="margin-top:15px; font-size:12px; color:#666; font-family:monospace;"></div>
         </div>
     </div>
 
-    <!-- Вкладка 3: Продажи -->
-    <div class="tab-content">
-        <h3>Наставник по B2B продажам и ЛПР</h3>
-        <label>Выберите проект из базы:</label>
-        <select id="partnerProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
-
-        <div style="display: flex; gap: 10px;">
-            <button class="action-btn" onclick="startNewPartnerSearch()">Начать охоту за клиентами</button>
-            <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат маркетолога очищен.')">Очистить чат</button>
+    <!-- Правая колонка: Воронка Событий / Dashboard Команды -->
+    <div class="sidebar-column">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eaeaea; padding-bottom:8px; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:16px; color:#1a1a1a;">Воронка событий</h3>
+            <button class="action-btn" style="padding:3px 8px; font-size:11px; margin-top:0;" onclick="loadProjectsFromCloud()">🔄</button>
         </div>
-
-        <div class="chat-box" id="partnerChatBox"></div>
-        <div class="chat-input-area">
-            <textarea id="partnerChatReply" rows="3" placeholder="Задайте вопрос маркетологу..."></textarea>
-            <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">Отправить</button>
+        <p style="font-size:12px; color:#64748b; margin-top:0;">События с датами, стадиями и целями. Видны всей команде.</p>
+        <div id="eventsListContainer">
+            <div style="font-size:12px; color:#94a3b8;">Загрузка событий...</div>
         </div>
-    </div>
-
-    <!-- Вкладка 4: Визуал -->
-    <div class="tab-content">
-        <h3>Арт-дирекция (Генерация визуала)</h3>
-        <label>Выберите проект из базы:</label>
-        <select id="artProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
-        
-        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-            <div style="flex:1; min-width: 140px;">
-                <label style="margin-top:0;">Стиль / Движок:</label>
-                <select id="artModel">
-                    <option value="flux">Flux (Реализм, топ-качество)</option>
-                    <option value="turbo">Turbo (Быстрая генерация)</option>
-                    <option value="any-dark">AnyDark (Мрачный, нуарный)</option>
-                </select>
-            </div>
-            <div style="flex:1; min-width: 140px;">
-                <label style="margin-top:0;">Формат картинки:</label>
-                <select id="artFormat">
-                    <option value="1024x1024">Квадрат (Пост)</option>
-                    <option value="768x1344">Вертикальный (Сторис/Reels)</option>
-                    <option value="1344x768">Горизонтальный (Обложка)</option>
-                </select>
-            </div>
-            <div style="flex:1; min-width: 140px;">
-                <label style="margin-top:0;">Количество:</label>
-                <select id="artCount">
-                    <option value="1">1 вариант</option>
-                    <option value="2">2 варианта</option>
-                    <option value="4">4 варианта</option>
-                </select>
-            </div>
-        </div>
-
-        <label>Дополнительные пожелания к картинке (опционально):</label>
-        <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, стиль нуар...">
-
-        <button class="action-btn" onclick="generateVisual()">Создать визуал через ИИ</button>
-        
-        <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует...</div>
-        
-        <div class="image-preview" id="imagePreviewContainer"></div>
-        <div id="artPromptDisplay" style="margin-top:15px; font-size:12px; color:#666; font-family:monospace;"></div>
     </div>
 </div>
 
@@ -215,6 +282,8 @@
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
     let currentKeyIndex = 0;
+    let projectsDB = [];
+    let eventsDB = [];
 
     function formatMessage(text) {
         return text
@@ -224,15 +293,19 @@
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/\n/g, '<br>');
     }
+
+    function getCurrentUser() {
+        return sessionStorage.getItem('theater_user') || 'admin';
+    }
     
     function updateKeyStatusUI() {
         const badge = document.getElementById('keyStatusBadge');
         const total = CONFIG.apiKeys.length;
         if(currentKeyIndex < total) {
-            badge.innerText = `🟢 Работает ключ ${currentKeyIndex + 1} из ${total}`;
+            badge.innerText = `🟢 Ключ ${currentKeyIndex + 1}/${total}`;
             badge.className = 'key-status';
         } else {
-            badge.innerText = `🔴 Все ключи исчерпали лимит`;
+            badge.innerText = `🔴 Лимиты исчерпаны`;
             badge.className = 'key-status error';
         }
     }
@@ -242,8 +315,9 @@
         const p = document.getElementById('passInput').value.trim();
         if(CONFIG.users[l] && CONFIG.users[l] === p) {
             sessionStorage.setItem('theater_logged_in', 'true');
+            sessionStorage.setItem('theater_user', l);
             document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'flex';
             initApp();
         } else {
             document.getElementById('loginError').style.display = 'block';
@@ -252,6 +326,7 @@
 
     function logout() {
         sessionStorage.removeItem('theater_logged_in');
+        sessionStorage.removeItem('theater_user');
         location.reload();
     }
 
@@ -261,12 +336,13 @@
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'flex';
             initApp();
         }
     };
 
     function initApp() {
+        document.getElementById('userBadge').innerText = `👤 ${getCurrentUser()}`;
         updateKeyStatusUI();
         addLinkField();
         loadProjectsFromCloud();
@@ -280,21 +356,30 @@
         document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
     }
 
-    let projectsDB = [];
-
+    // Загрузка проектов и событий из Google Apps Script
     async function loadProjectsFromCloud() {
         document.getElementById('cloudLoadingIndicator').style.display = 'block';
         try {
             const response = await fetch(SCRIPT_URL);
-            projectsDB = await response.json();
+            const data = await response.json();
+            
+            // Поддержка нового формата { projects: [...], events: [...] } и обратная совместимость
+            if (data.projects) {
+                projectsDB = data.projects;
+                eventsDB = data.events || [];
+            } else if (Array.isArray(data)) {
+                projectsDB = data;
+                eventsDB = [];
+            }
+            
             document.getElementById('cloudLoadingIndicator').style.display = 'none';
             renderProjects();
+            renderEvents();
         } catch(error) {
-            document.getElementById('cloudLoadingIndicator').innerText = "Ошибка загрузки из облака: " + error.message;
+            document.getElementById('cloudLoadingIndicator').innerText = "Ошибка загрузки: " + error.message;
         }
     }
 
-    // НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕДАЧИ СПИСКА ПРОЕКТОВ БОТУ
     function getProjectsListContext() {
         if (projectsDB.length === 0) return "База проектов пока пуста.";
         let ctx = "СПИСОК ТЕКУЩИХ ПРОЕКТОВ В БАЗЕ (Используй ID для команд):\n";
@@ -302,6 +387,7 @@
         return ctx;
     }
 
+    // Сохранение проекта (Лист 1)
     async function saveProjectToCloud() {
         const name = document.getElementById('projName').value.trim();
         if(!name) { alert("Укажите хотя бы название проекта!"); return; }
@@ -309,13 +395,15 @@
         btn.innerText = "Сохранение..."; btn.disabled = true;
 
         const proj = {
-            id: Date.now(), name: name,
+            id: Date.now(),
+            name: name,
             essence: document.getElementById('projEssence').value,
             audience: document.getElementById('projAudience').value,
             pain: document.getElementById('projPain').value,
             format: document.getElementById('projFormat').value,
             check: document.getElementById('projCheck').value, 
-            argument: document.getElementById('projArgument').value
+            argument: document.getElementById('projArgument').value,
+            author: getCurrentUser()
         };
         
         try {
@@ -348,6 +436,142 @@
         }
     }
 
+    // Создание события в воронку из Первой вкладки
+    async function createEventFromInputs() {
+        const projId = document.getElementById('courseSelect').value;
+        const p = projectsDB.find(x => x.id == projId);
+        if(!p) { alert('Пожалуйста, выберите проект из базы!'); return; }
+
+        const promoStart = document.getElementById('promoStart').value;
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const postEnd = document.getElementById('postEnd').value;
+        const sum = document.getElementById('targetSum').value;
+
+        if(!start || !end || !sum) {
+            alert('Для создания события заполните хотя бы: Дату старта, Дату окончания и Сумму цели!');
+            return;
+        }
+
+        const newEvent = {
+            scope: 'event',
+            action: 'create',
+            id: Date.now(),
+            projectName: p.name,
+            promoStart: promoStart || '',
+            startDate: start,
+            endDate: end,
+            postEnd: postEnd || '',
+            targetSum: sum,
+            status: 'Планирование',
+            author: getCurrentUser(),
+            strategyNotes: ''
+        };
+
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(newEvent) });
+            await loadProjectsFromCloud();
+            alert(`✅ Событие «${p.name}» добавлено в воронку!`);
+        } catch(err) {
+            alert('Ошибка создания события: ' + err.message);
+        }
+    }
+
+    // Смена статуса события
+    async function updateEventStatus(eventId, newStatus) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ scope: 'event', action: 'update_status', id: eventId, status: newStatus })
+            });
+            const ev = eventsDB.find(e => e.id == eventId);
+            if (ev) ev.status = newStatus;
+        } catch(err) {
+            alert('Не удалось обновить статус: ' + err.message);
+        }
+    }
+
+    // Удаление события
+    async function deleteEvent(eventId, name) {
+        if (!confirm(`Удалить событие «${name}» из воронки?`)) return;
+        if (!confirm(`ВНИМАНИЕ! Это действие удалит событие из графика навсегда. Подтверждаете?`)) return;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ scope: 'event', action: 'delete', id: eventId })
+            });
+            await loadProjectsFromCloud();
+        } catch(err) {
+            alert('Ошибка при удалении события: ' + err.message);
+        }
+    }
+
+    // Вычисление фазы и шкалы времени
+    function computeTimeline(promo, start, end, post) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        const parseD = s => s ? new Date(s) : null;
+        const dPromo = parseD(promo);
+        const dStart = parseD(start);
+        const dEnd = parseD(end);
+        const dPost = parseD(post);
+
+        const diffDays = (target) => Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+
+        if (dStart && today < dStart) {
+            if (dPromo && today >= dPromo) {
+                const daysToStart = diffDays(dStart);
+                return { phase: 'phase-promo', label: `🔥 Прогрев (до старта ${daysToStart} дн.)` };
+            }
+            const daysToStart = diffDays(dStart);
+            return { phase: 'phase-promo', label: `⏳ Планирование (до старта ${daysToStart} дн.)` };
+        } else if (dStart && dEnd && today >= dStart && today <= dEnd) {
+            const daysToEnd = diffDays(dEnd);
+            return { phase: 'phase-active', label: `🚀 Идёт сбор (до финиша ${daysToEnd} дн.)` };
+        } else if (dEnd && (!dPost || today <= dPost)) {
+            const daysToPost = dPost ? diffDays(dPost) : 0;
+            return { phase: 'phase-post', label: `📦 Постэффект / Лоты (осталось ${daysToPost} дн.)` };
+        } else {
+            return { phase: 'phase-done', label: `🏁 Завершено` };
+        }
+    }
+
+    function renderEvents() {
+        const container = document.getElementById('eventsListContainer');
+        container.innerHTML = '';
+        if(eventsDB.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:15px 0;">Событий пока нет.<br>Создайте первое событие во вкладке 1!</div>';
+            return;
+        }
+
+        eventsDB.forEach(ev => {
+            const tl = computeTimeline(ev.promoStart, ev.startDate, ev.endDate, ev.postEnd);
+            const statuses = ['Планирование', 'Прогрев', 'Активный сбор', 'Постэффект', 'Архив'];
+            let optionsHtml = '';
+            statuses.forEach(st => {
+                optionsHtml += `<option value="${st}" ${ev.status === st ? 'selected' : ''}>${st}</option>`;
+            });
+
+            container.innerHTML += `
+            <div class="event-card ${tl.phase}">
+                <button onclick="deleteEvent(${ev.id}, '${ev.projectName.replace(/'/g, "\\'")}')" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:bold;" title="Удалить событие">✕</button>
+                <h5>${ev.projectName}</h5>
+                <span class="event-badge badge-author">👤 ${ev.author || 'Команда'}</span>
+                <div class="timeline-text">${tl.label}</div>
+                <div style="font-size:12px; color:#334155; margin:3px 0;">🎯 <b>Цель:</b> ${ev.targetSum} руб.</div>
+                <div style="font-size:11px; color:#64748b; margin-bottom:6px;">Сбор: ${ev.startDate || '—'} по ${ev.endDate || '—'}</div>
+                <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
+                    <span style="font-size:11px; font-weight:bold; color:#475569;">Статус:</span>
+                    <select style="padding:2px 4px; font-size:11px; width:auto; flex:1;" onchange="updateEventStatus(${ev.id}, this.value)">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            </div>`;
+        });
+    }
+
     async function improveProject(id) {
         const p = projectsDB.find(x => x.id == id);
         if(!p) return;
@@ -371,7 +595,6 @@
         
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
         
-        // Отправляем с контекстом ссылок и списком проектов
         const context = getLinksContext() + "\n\n" + getProjectsListContext();
         await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, context);
     }
@@ -380,15 +603,18 @@
         const list = document.getElementById('projectsList');
         list.innerHTML = '';
         projectsDB.forEach(p => {
-            const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
+            const checkHtml = p.check ? `<p style="font-size:13px; margin:4px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
+            const authorHtml = `<span class="event-badge badge-author" style="margin-bottom:6px;">👤 Автор: ${p.author || 'Не указан'}</span>`;
+            
             list.innerHTML += `<div class="project-card">
                 <h4>${p.name}</h4>
-                <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
-                <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
+                ${authorHtml}
+                <p style="font-size:13px; margin:4px 0;"><b>Суть:</b> ${p.essence}</p>
+                <p style="font-size:13px; margin:4px 0;"><b>Аудитория:</b> ${p.audience}</p>
                 ${checkHtml}
                 <div style="position: absolute; top: 15px; right: 15px; display: flex; gap: 5px;">
-                    <button class="action-btn green-btn" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="improveProject(${p.id})">✨ Улучшить</button>
-                    <button class="action-btn danger-btn" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteProject(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Удалить</button>
+                    <button class="action-btn green-btn" style="padding: 4px 8px; font-size: 11px; margin: 0;" onclick="improveProject(${p.id})">✨ Улучшить</button>
+                    <button class="action-btn danger-btn" style="padding: 4px 8px; font-size: 11px; margin: 0;" onclick="deleteProject(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Удалить</button>
                 </div>
                 </div>`;
         });
@@ -402,19 +628,27 @@
     function getProjectContext(projectId) {
         const p = projectsDB.find(x => x.id == projectId);
         if(!p) return "";
-        return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nСредний чек: ${p.check || 'не указан'}\nНаш аргумент: ${p.argument}\n`;
+        return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nСредний чек: ${p.check || 'не указан'}\nНаш аргумент: ${p.argument}\nАвтор проекта: ${p.author || 'не указан'}\n`;
     }
 
     function addLinkField() {
         const div = document.createElement('div');
         div.className = 'link-row';
-        div.innerHTML = `<input type="url" class="context-link" placeholder="https://..." style="width:85%; display:inline-block;"><button type="button" class="danger-btn" style="width:12%; margin-left:2%;" onclick="this.parentElement.remove()">X</button>`;
+        div.innerHTML = `<input type="url" class="context-link" placeholder="https://..." style="width:85%; display:inline-block;"><button type="button" class="danger-btn" style="width:12%; margin-left:2%; padding:8px 0;" onclick="this.parentElement.remove()">X</button>`;
         document.getElementById('linksContainer').appendChild(div);
     }
 
     function getLinksContext() {
         const links = Array.from(document.querySelectorAll('.context-link')).map(i => i.value.trim()).filter(v => v !== '');
         return links.length > 0 ? "\nОБЯЗАТЕЛЬНЫЙ КОНТЕКСТ ИЗ ССЫЛОК:\n" + links.join("\n") : "";
+    }
+
+    function copyToClipboard(rawText, btnElement) {
+        navigator.clipboard.writeText(rawText).then(() => {
+            const original = btnElement.innerText;
+            btnElement.innerText = 'Скопировано! ✅';
+            setTimeout(() => { btnElement.innerText = original; }, 1500);
+        });
     }
 
     function renderChatUI(storageKey, boxId) {
@@ -426,12 +660,16 @@
         
         box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
-        history.forEach(msg => {
+        history.forEach((msg, idx) => {
             const div = document.createElement('div');
             div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
             
             if (msg.role === 'model' && !msg.isError) {
-                div.innerHTML = formatMessage(msg.parts[0].text);
+                div.innerHTML = `<button class="copy-btn" id="copy_${boxId}_${idx}">📋 Копировать</button>` + formatMessage(msg.parts[0].text);
+                setTimeout(() => {
+                    const btn = document.getElementById(`copy_${boxId}_${idx}`);
+                    if (btn) btn.onclick = () => copyToClipboard(msg.parts[0].text, btn);
+                }, 0);
             } else {
                 div.innerText = msg.parts[0].text; 
             }
@@ -458,6 +696,12 @@
         await processTurn(storageKey, boxId, systemPrompt);
     }
 
+    // Быстрые кнопки (Quick Action Chips)
+    function quickSend(inputId, promptText, storageKey, boxId, systemPrompt) {
+        document.getElementById(inputId).value = promptText;
+        sendReply(inputId, storageKey, boxId, systemPrompt);
+    }
+
     async function sendBuilderReply() {
         const text = document.getElementById('builderChatReply').value.trim();
         if(!text) return;
@@ -467,7 +711,6 @@
         document.getElementById('builderChatReply').value = '';
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
         
-        // Отправляем контекст + актуальный список проектов
         const dynamicContext = getLinksContext() + "\n\n" + getProjectsListContext();
         await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, dynamicContext);
     }
@@ -486,8 +729,9 @@
 ВВОДНЫЕ ДАННЫЕ ОТ АВТОРА:
 - Период рекламы и прогрева: с ${promoStart || 'не указано'} по ${start}
 - Сроки активного сбора: с ${start} по ${end}
-- Период постэффекта (работа с аудиторией после): до ${postEnd || 'не указано'}
+- Период постэффекта: до ${postEnd || 'не указано'}
 - Финансовая цель: ${sum} руб.
+- Ответственный сотрудник: ${getCurrentUser()}
 
 Прочитай эти данные и начинай работу с ЭТАПА 1.`;
         
@@ -520,12 +764,8 @@
             let responseText = await fetchGeminiAPI(apiHistory, systemPrompt);
             document.getElementById('loadingMsg').remove();
 
-            // ==========================================
-            // ПЕРЕХВАТ И ВЫПОЛНЕНИЕ "МАГИЧЕСКИХ КОМАНД"
-            // ==========================================
+            // Перехват агентных команд
             if (storageKey === 'theater_builder_chat_history') {
-                
-                // КОМАНДА: УДАЛИТЬ
                 const deleteMatch = responseText.match(/<<<ACTION_DELETE:\s*(\d+)\s*>>>/);
                 if (deleteMatch) {
                     const idToDelete = parseInt(deleteMatch[1]);
@@ -540,7 +780,6 @@
                     }
                 }
 
-                // КОМАНДА: УЛУЧШИТЬ
                 const improveMatch = responseText.match(/<<<ACTION_IMPROVE:\s*(\d+)\s*>>>/);
                 if (improveMatch) {
                     const idToImprove = parseInt(improveMatch[1]);
@@ -548,23 +787,22 @@
                     responseText = responseText.replace(improveMatch[0], `\n✨ **Принято! Запускаю процесс автоматического улучшения...**\n`);
                 }
 
-                // КОМАНДА: СОХРАНИТЬ
                 const saveMatch = responseText.match(/<<<ACTION_SAVE:\s*([\s\S]*?)\s*>>>/);
                 if (saveMatch) {
                     try {
                         let jsonStr = saveMatch[1].replace(/```json/g, '').replace(/```/g, '').trim();
                         const projData = JSON.parse(jsonStr);
                         projData.id = Date.now();
+                        projData.author = getCurrentUser();
                         box.innerHTML += `<div class="msg model" style="background:#d4edda; color:#155724;">🔄 ИИ сохраняет проект «${projData.name}»...</div>`;
                         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(projData) });
                         await loadProjectsFromCloud();
-                        responseText = responseText.replace(saveMatch[0], `\n✅ **Готово! Проект «${projData.name}» успешно сохранен в облачную базу.**\nВы можете увидеть его в списке выше.\n`);
+                        responseText = responseText.replace(saveMatch[0], `\n✅ **Готово! Проект «${projData.name}» успешно сохранен в облачную базу.**\n`);
                     } catch(e) {
-                        responseText = responseText.replace(saveMatch[0], `\n❌ **Я попытался сохранить проект, но произошла ошибка:** ${e.message}\n`);
+                        responseText = responseText.replace(saveMatch[0], `\n❌ **Ошибка при авто-сохранении:** ${e.message}\n`);
                     }
                 }
             }
-            // ==========================================
 
             history.push({ role: 'model', parts: [{ text: responseText }] });
             localStorage.setItem(storageKey, JSON.stringify(history));
@@ -604,9 +842,7 @@
             for(let i = 0; i < count; i++) {
                 const seed = Math.floor(Math.random() * 1000000);
                 const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=${modelName}`;
-                
                 const flexBasis = count === 1 ? '100%' : 'calc(50% - 15px)';
-                
                 imagesHtml += `<img src="${imgUrl}" alt="Вариант ${i+1}" style="flex: 1 1 ${flexBasis}; max-width: 100%;">`;
             }
             
@@ -644,7 +880,7 @@
                             currentKeyIndex++;
                             updateKeyStatusUI();
                             if (currentKeyIndex >= CONFIG.apiKeys.length) {
-                                throw new Error("⚠️ Лимиты исчерпаны на ВСЕХ ключах. Подождите или добавьте новые в config.js.");
+                                throw new Error("⚠️ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
                             }
                             break; 
                         }
@@ -652,7 +888,7 @@
                             if (attempt < maxRetries) { await new Promise(r => setTimeout(r, 2000)); continue; }
                             throw new Error("⚠️ Серверы Google перегружены (503). Повторите запрос.");
                         }
-                        if (code === 400) throw new Error("⚠️ Ошибка 400. Скорее всего, заблокировано по геолокации. Включите VPN.");
+                        if (code === 400) throw new Error("⚠️ Ошибка 400 (геолокация). Включите VPN.");
                         throw new Error(`⚠️ Ошибка API (${code}): ${data.error.message}`);
                     }
 
