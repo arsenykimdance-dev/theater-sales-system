@@ -47,7 +47,8 @@
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
         .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; position: relative; }
-        .project-card h4 { margin: 0 80px 10px 0; color: #0066cc; }
+        /* Даем отступ заголовку, чтобы кнопки не налезали на длинный текст */
+        .project-card h4 { margin: 0 170px 10px 0; color: #0066cc; } 
         
         .image-preview { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
         .image-preview img { border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: cover; }
@@ -134,13 +135,13 @@
             <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
 
             <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов</h4>
-            <p style="font-size: 13px; color: #666; margin-top: 0;">Скиньте ссылки на материалы или просто опишите идею своими словами — бот поможет собрать красивую карточку.</p>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Скиньте ссылки на материалы, опишите идею своими словами или нажмите кнопку "Улучшить" на карточке проекта.</p>
             
             <div id="linksContainer"></div>
             <button class="action-btn" style="background:#6c757d; padding: 5px 15px; font-size:12px;" onclick="addLinkField()">+ Добавить ссылку для контекста</button>
 
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите вашу идею или дайте ссылки, и мы упакуем проект.')">Очистить чат Сборщика</button>
+                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите вашу идею, дайте ссылки или нажмите «Улучшить» на готовом проекте.')">Очистить чат Сборщика</button>
             </div>
 
             <div class="chat-box" style="height: 300px; background: #fff;" id="builderChatBox"></div>
@@ -175,7 +176,6 @@
         <label>Выберите проект из базы:</label>
         <select id="artProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
         
-        <!-- НОВЫЙ БЛОК НАСТРОЕК ГЕНЕРАЦИИ -->
         <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
             <div style="flex:1; min-width: 140px;">
                 <label style="margin-top:0;">Стиль / Движок:</label>
@@ -210,7 +210,6 @@
         
         <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует...</div>
         
-        <!-- Сюда прилетят картинки (они выстроятся в сетку) -->
         <div class="image-preview" id="imagePreviewContainer"></div>
         <div id="artPromptDisplay" style="margin-top:15px; font-size:12px; color:#666; font-family:monospace;"></div>
     </div>
@@ -350,17 +349,50 @@
         }
     }
 
+    // === НОВАЯ ФУНКЦИЯ ДЛЯ УЛУЧШЕНИЯ ПРОЕКТА ===
+    async function improveProject(id) {
+        const p = projectsDB.find(x => x.id == id);
+        if(!p) return;
+
+        // Плавно скроллим страницу вниз к чату Сборщика
+        document.getElementById('builderChatBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const prompt = `ЗАДАЧА: Улучшить существующий проект.
+Вот текущие (сырые) данные:
+1. Название: ${p.name || 'пусто'}
+2. Суть: ${p.essence || 'пусто'}
+3. ЦА: ${p.audience || 'пусто'}
+4. Боли: ${p.pain || 'пусто'}
+5. Формат: ${p.format || 'пусто'}
+6. Средний чек: ${p.check || 'пусто'}
+7. Главный аргумент: ${p.argument || 'пусто'}
+
+Пожалуйста, проанализируй эту информацию. Самостоятельно заполни пустые места (предложи лучшие гипотезы), исправь слабые или непонятные формулировки и сделай описание максимально сильным, четким и продающим. 
+Выдай мне готовую улучшенную карточку по всем 7 пунктам.`;
+
+        let history = JSON.parse(localStorage.getItem('theater_builder_chat_history')) || [];
+        history.push({ role: 'user', parts: [{ text: prompt }] });
+        localStorage.setItem('theater_builder_chat_history', JSON.stringify(history));
+        
+        renderChatUI('theater_builder_chat_history', 'builderChatBox');
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, getLinksContext());
+    }
+
     function renderProjects() {
         const list = document.getElementById('projectsList');
         list.innerHTML = '';
         projectsDB.forEach(p => {
             const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
+            // Вывод карточки с двумя кнопками
             list.innerHTML += `<div class="project-card">
                 <h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
                 <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
                 ${checkHtml}
-                <button class="action-btn danger-btn" style="position: absolute; top: 15px; right: 15px; padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteProject(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Удалить</button>
+                <div style="position: absolute; top: 15px; right: 15px; display: flex; gap: 5px;">
+                    <button class="action-btn green-btn" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="improveProject(${p.id})">✨ Улучшить</button>
+                    <button class="action-btn danger-btn" style="padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteProject(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Удалить</button>
+                </div>
                 </div>`;
         });
         const selects = document.querySelectorAll('.dynamic-project-list');
@@ -393,7 +425,7 @@
         const box = document.getElementById(boxId);
         
         let emptyText = "Жду ваших указаний.";
-        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите вашу идею или дайте ссылки, и мы упакуем проект.";
+        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите вашу идею, дайте ссылки или нажмите «Улучшить» на готовом проекте.";
         
         box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
@@ -499,7 +531,6 @@
         }
     }
 
-    // === ОБНОВЛЕННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ВИЗУАЛА ===
     async function generateVisual() {
         const projId = document.getElementById('artProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
@@ -518,19 +549,16 @@
         const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
         try {
-            // 1. Просим ИИ написать 1 идеальный промпт
             const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.");
             document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
             
             const encodedPrompt = encodeURIComponent(engPrompt);
             let imagesHtml = '';
             
-            // 2. Генерируем нужное количество картинок через цикл
             for(let i = 0; i < count; i++) {
                 const seed = Math.floor(Math.random() * 1000000);
                 const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=${modelName}`;
                 
-                // Вычисляем ширину картинки для красивой сетки: если 1 картинка - 100%, если больше - 48% (по две в ряд)
                 const flexBasis = count === 1 ? '100%' : 'calc(50% - 15px)';
                 
                 imagesHtml += `<img src="${imgUrl}" alt="Вариант ${i+1}" style="flex: 1 1 ${flexBasis}; max-width: 100%;">`;
