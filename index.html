@@ -39,8 +39,8 @@
         button.green-btn { background: #28a745; }
         
         .chat-box { height: 400px; overflow-y: auto; background: #e9ecef; border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 4px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; white-space: pre-wrap; font-size: 14px; }
-        .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
+        .msg { padding: 12px; border-radius: 8px; max-width: 85%; line-height: 1.5; font-size: 14px; } 
+        .msg.user { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; white-space: pre-wrap; } 
         .msg.model { background: #fff; align-self: flex-start; border: 1px solid #ccc; }
         .msg.error-msg { background: #f8d7da; border: 1px solid #f5c2c7; color: #842029; }
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
@@ -99,7 +99,6 @@
         <div class="chat-box" id="chatBox"></div>
         <div class="chat-input-area">
             <textarea id="chatReply" rows="3" placeholder="Напишите ответ ИИ..."></textarea>
-            <!-- Обновлено: теперь обычные реплаи в этой вкладке тоже уходят Продюсеру (PROMPT_ADMIN) -->
             <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
         </div>
     </div>
@@ -183,6 +182,16 @@
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
     let currentKeyIndex = 0;
+
+    // === НОВАЯ ФУНКЦИЯ ДЛЯ КРАСИВОГО ТЕКСТА ===
+    function formatMessage(text) {
+        return text
+            .replace(/### (.*)/g, '<strong style="font-size: 15px; color: #0066cc; display: block; margin-top: 10px;">$1</strong>')
+            .replace(/## (.*)/g, '<strong style="font-size: 16px; color: #0066cc; display: block; margin-top: 12px;">$1</strong>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
+    }
     
     function updateKeyStatusUI() {
         const badge = document.getElementById('keyStatusBadge');
@@ -313,14 +322,23 @@
         return links.length > 0 ? "\nОБЯЗАТЕЛЬНЫЙ КОНТЕКСТ ИЗ ССЫЛОК:\n" + links.join("\n") : "";
     }
 
+    // === ОБНОВЛЕННАЯ ФУНКЦИЯ ОТРИСОВКИ ЧАТА ===
     function renderChatUI(storageKey, boxId) {
         const history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
         box.innerHTML = history.length === 0 ? '<div class="msg model">Жду ваших указаний.</div>' : '';
+        
         history.forEach(msg => {
             const div = document.createElement('div');
             div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
-            div.innerText = msg.parts[0].text;
+            
+            // Если пишет бот (модель) и это не ошибка, пропускаем через функцию красоты
+            if (msg.role === 'model' && !msg.isError) {
+                div.innerHTML = formatMessage(msg.parts[0].text);
+            } else {
+                div.innerText = msg.parts[0].text; 
+            }
+            
             box.appendChild(div);
         });
         box.scrollTop = box.scrollHeight;
@@ -376,7 +394,6 @@
         
         localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_chat_history', 'chatBox');
-        // Обращаемся к промпту Продюсера
         processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN); 
     }
 
