@@ -13,11 +13,11 @@
     
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .app-layout { max-width: 1380px; margin: 0 auto; display: flex; gap: 20px; align-items: flex-start; }
+        .app-layout { max-width: 1440px; margin: 0 auto; display: flex; gap: 20px; align-items: flex-start; }
         .main-column { flex: 1; min-width: 0; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
-        .sidebar-column { width: 380px; flex-shrink: 0; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: sticky; top: 20px; max-height: calc(100vh - 80px); overflow-y: auto; }
+        .sidebar-column { width: 420px; flex-shrink: 0; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: sticky; top: 20px; max-height: calc(100vh - 80px); overflow-y: auto; }
         
-        @media (max-width: 1024px) {
+        @media (max-width: 1100px) {
             .app-layout { flex-direction: column; }
             .sidebar-column { width: 100%; position: static; max-height: none; }
         }
@@ -31,7 +31,7 @@
         .key-status.warning { background: #fff2cc; color: #7f6000; border-color: #ffe699; }
         .key-status.error { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
 
-        h1 { font-size: 22px; color: #1a1a1a; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 0; }
+        h1 { font-size: 22px; color: #1a1a1a; margin-top: 0; }
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { padding: 9px 13px; border: none; background: #e0e0e0; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 13px; }
         .tab-btn.active { background: #333; color: #fff; }
@@ -68,14 +68,19 @@
         .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 14px; margin-top: 10px; border-radius: 6px; position: relative; }
         .project-card h4 { margin: 0 170px 8px 0; color: #0066cc; font-size: 15px; } 
         
-        .event-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-left: 4px solid #0066cc; padding: 12px; margin-bottom: 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; }
+        .event-card { background: #fdfdfd; border: 1px solid #e2e8f0; border-left: 4px solid #0066cc; padding: 12px; margin-bottom: 12px; border-radius: 4px; position: relative; }
         .event-card.phase-promo { border-left-color: #fd7e14; }
         .event-card.phase-active { border-left-color: #28a745; }
         .event-card.phase-post { border-left-color: #6f42c1; }
         .event-card.phase-done { border-left-color: #6c757d; }
         .event-card h5 { margin: 0 45px 5px 0; font-size: 14px; color: #1e293b; }
+        
+        .lead-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; padding: 12px; margin-bottom: 10px; border-radius: 4px; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .lead-card h5 { margin: 0 45px 4px 0; font-size: 14px; color: #0f172a; }
+        
         .event-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 6px; }
         .badge-author { background: #e0f2fe; color: #0369a1; }
+        .badge-segment { background: #fef3c7; color: #92400e; }
         .timeline-text { font-size: 12px; color: #475569; font-weight: 500; margin: 4px 0; }
         
         .image-preview { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
@@ -95,7 +100,7 @@
 </div>
 
 <div class="app-layout" id="mainApp" style="display: none;">
-    <!-- Левая колонка: Основные инструменты и чаты -->
+    <!-- Левая колонка -->
     <div class="main-column">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 15px;">
             <h1 style="border:none; margin:0; padding:0;">Управление продажами & AI</h1>
@@ -108,7 +113,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
             <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
-            <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
+            <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Поиск ЛПР (Web Search)</button>
             <button class="tab-btn" onclick="switchTab(3)">4. Визуал & Арт-дирекция</button>
             <button class="tab-btn" style="background:transparent; color:#666; text-decoration:underline;" onclick="logout()">Выход</button>
         </div>
@@ -196,26 +201,42 @@
             </div>
         </div>
 
-        <!-- Вкладка 3: Продажи -->
+        <!-- Вкладка 3: Продажи с Web Search -->
         <div class="tab-content">
-            <h3>Наставник по B2B продажам и ЛПР</h3>
-            <label>Выберите проект из базы:</label>
-            <select id="partnerProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
+            <h3>Поиск клиентов, ЛПР и организаций (Google Search)</h3>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 200px;">
+                    <label>Выберите проект из базы:</label>
+                    <select id="partnerProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                    <label>Справочник мишеней:</label>
+                    <select id="targetSegmentSelect" onchange="applySegmentPreset()">
+                        <option value="">-- Выбрать кластер --</option>
+                        <option value="Креативные пространства СПб (Севкабель, Бертгольд, Новая Голландия, Третье Место)">Креативные пространства СПб</option>
+                        <option value="IT-компании СПб от 100 чел (Selectel, Wrike, Nexign, Semrush)">IT-компании СПб</option>
+                        <option value="Ресторанные группы СПб (Кореана, Ginza, Italy&Co, DuoBand)">Ресторанные сети СПб</option>
+                        <option value="MICE и Event-агентства СПб и Москвы">Event / MICE агентства</option>
+                    </select>
+                </div>
+            </div>
 
-            <div style="display: flex; gap: 10px;">
-                <button class="action-btn" onclick="startNewPartnerSearch()">Начать охоту за клиентами</button>
-                <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат маркетолога очищен.')">Очистить чат</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                <button class="action-btn green-btn" onclick="startNewPartnerSearch()">🌐 Найти реальные компании через Web Search</button>
+                <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат продаж очищен.')">Очистить чат</button>
             </div>
 
             <div class="chat-box" id="partnerChatBox"></div>
             <div class="quick-chips">
-                <span class="chip" onclick="quickSend('partnerChatReply', 'Напиши готовый холодный скрипт для первого сообщения', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">✉️ Напиши скрипт</span>
-                <span class="chip" onclick="quickSend('partnerChatReply', 'Предложи дерзкий способ обойти секретаря', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">🎭 Обход секретаря</span>
-                <span class="chip" onclick="quickSend('partnerChatReply', 'Клиент говорит что это дорого. Как закрыть возражение?', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">💰 Возражение: Дорого</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Найди контакты ЛПР и открытые каналы связи по этим компаниям через веб-поиск', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">🔍 Найти прямые контакты</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Сохрани найденную компанию как лид в облачную базу', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">📥 Сохрани лид в базу</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Напиши персонализированный скрипт первого касания для этого ЛПР', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">✉️ Напиши скрипт</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Дай 2 хитрых способа обойти секретаря по телефону', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">🎭 Обход секретаря</span>
             </div>
             <div class="chat-input-area">
-                <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос маркетологу..."></textarea>
-                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES)">Отправить</button>
+                <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос или попросите найти конкретные компании..."></textarea>
+                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">Отправить</button>
             </div>
         </div>
 
@@ -264,26 +285,38 @@
         </div>
     </div>
 
-    <!-- Правая колонка: Воронка Событий / Dashboard Команды -->
+    <!-- Правая колонка: CRM & Воронка -->
     <div class="sidebar-column">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eaeaea; padding-bottom:8px; margin-bottom:12px;">
-            <h3 style="margin:0; font-size:16px; color:#1a1a1a;">Воронка событий</h3>
+            <div style="display:flex; gap:6px;">
+                <button id="btnSideEvents" class="tab-btn active" style="padding:4px 8px; font-size:11px;" onclick="toggleSidebarTab('events')">Воронка событий</button>
+                <button id="btnSideLeads" class="tab-btn" style="padding:4px 8px; font-size:11px;" onclick="toggleSidebarTab('leads')">Лиды & CRM</button>
+            </div>
             <button class="action-btn" style="padding:3px 8px; font-size:11px; margin-top:0;" onclick="loadProjectsFromCloud()">🔄</button>
         </div>
-        <p style="font-size:12px; color:#64748b; margin-top:0;">События с датами, стадиями и целями. Видны всей команде.</p>
-        <div id="eventsListContainer">
-            <div style="font-size:12px; color:#94a3b8;">Загрузка событий...</div>
+
+        <!-- Контейнер событий -->
+        <div id="sideEventsView">
+            <p style="font-size:12px; color:#64748b; margin-top:0;">События с датами, стадиями и целями.</p>
+            <div id="eventsListContainer"><div style="font-size:12px; color:#94a3b8;">Загрузка событий...</div></div>
+        </div>
+
+        <!-- Контейнер лидов -->
+        <div id="sideLeadsView" style="display:none;">
+            <p style="font-size:12px; color:#64748b; margin-top:0;">Найденные компании и ЛПР с контактами.</p>
+            <div id="leadsListContainer"><div style="font-size:12px; color:#94a3b8;">Загрузка лидов...</div></div>
         </div>
     </div>
 </div>
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
-    const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+    const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
     let currentKeyIndex = 0;
     let projectsDB = [];
     let eventsDB = [];
+    let leadsDB = [];
 
     function formatMessage(text) {
         return text
@@ -352,29 +385,44 @@
     }
 
     function switchTab(index) {
-        document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
-        document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
+        document.querySelectorAll('.tabs .tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
+        document.querySelectorAll('.main-column .tab-content').forEach((content, i) => content.classList.toggle('active', i === index));
     }
 
-    // Загрузка проектов и событий из Google Apps Script
+    function toggleSidebarTab(tab) {
+        const isEvents = tab === 'events';
+        document.getElementById('btnSideEvents').classList.toggle('active', isEvents);
+        document.getElementById('btnSideLeads').classList.toggle('active', !isEvents);
+        document.getElementById('sideEventsView').style.display = isEvents ? 'block' : 'none';
+        document.getElementById('sideLeadsView').style.display = isEvents ? 'none' : 'block';
+    }
+
+    function applySegmentPreset() {
+        const val = document.getElementById('targetSegmentSelect').value;
+        if (!val) return;
+        document.getElementById('partnerChatReply').value = `Найди через веб-поиск 3-4 конкретные действующие организации по кластеру: «${val}». Укажи сайты, имена руководителей/ЛПР и прямые контакты.`;
+    }
+
     async function loadProjectsFromCloud() {
         document.getElementById('cloudLoadingIndicator').style.display = 'block';
         try {
             const response = await fetch(SCRIPT_URL);
             const data = await response.json();
             
-            // Поддержка нового формата { projects: [...], events: [...] } и обратная совместимость
             if (data.projects) {
                 projectsDB = data.projects;
                 eventsDB = data.events || [];
+                leadsDB = data.leads || [];
             } else if (Array.isArray(data)) {
                 projectsDB = data;
                 eventsDB = [];
+                leadsDB = [];
             }
             
             document.getElementById('cloudLoadingIndicator').style.display = 'none';
             renderProjects();
             renderEvents();
+            renderLeads();
         } catch(error) {
             document.getElementById('cloudLoadingIndicator').innerText = "Ошибка загрузки: " + error.message;
         }
@@ -387,7 +435,6 @@
         return ctx;
     }
 
-    // Сохранение проекта (Лист 1)
     async function saveProjectToCloud() {
         const name = document.getElementById('projName').value.trim();
         if(!name) { alert("Укажите хотя бы название проекта!"); return; }
@@ -436,7 +483,6 @@
         }
     }
 
-    // Создание события в воронку из Первой вкладки
     async function createEventFromInputs() {
         const projId = document.getElementById('courseSelect').value;
         const p = projectsDB.find(x => x.id == projId);
@@ -477,7 +523,6 @@
         }
     }
 
-    // Смена статуса события
     async function updateEventStatus(eventId, newStatus) {
         try {
             await fetch(SCRIPT_URL, {
@@ -491,10 +536,9 @@
         }
     }
 
-    // Удаление события
     async function deleteEvent(eventId, name) {
         if (!confirm(`Удалить событие «${name}» из воронки?`)) return;
-        if (!confirm(`ВНИМАНИЕ! Это действие удалит событие из графика навсегда. Подтверждаете?`)) return;
+        if (!confirm(`ВНИМАНИЕ! Это действие удалит событие навсегда. Подтверждаете?`)) return;
 
         try {
             await fetch(SCRIPT_URL, {
@@ -507,7 +551,70 @@
         }
     }
 
-    // Вычисление фазы и шкалы времени
+    // === CRM ЛИДОВ ===
+    async function updateLeadStatus(leadId, newStatus) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ scope: 'lead', action: 'update_status', id: leadId, status: newStatus })
+            });
+            const ld = leadsDB.find(l => l.id == leadId);
+            if (ld) ld.status = newStatus;
+        } catch(err) {
+            alert('Не удалось обновить статус лида: ' + err.message);
+        }
+    }
+
+    async function deleteLead(leadId, company) {
+        if (!confirm(`Удалить лид «${company}»?`)) return;
+        if (!confirm(`ВНИМАНИЕ! Лид будет стерт из базы навсегда. Точно?`)) return;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ scope: 'lead', action: 'delete', id: leadId })
+            });
+            await loadProjectsFromCloud();
+        } catch(err) {
+            alert('Ошибка при удалении лида: ' + err.message);
+        }
+    }
+
+    function renderLeads() {
+        const container = document.getElementById('leadsListContainer');
+        container.innerHTML = '';
+        if(leadsDB.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:15px 0;">Лидов пока нет.<br>Найдите первые компании через поиск во вкладке 3!</div>';
+            return;
+        }
+
+        const statuses = ['Не отправлено', 'Отправлено', 'Ответ', 'Встреча', 'Сделка'];
+
+        leadsDB.forEach(l => {
+            let optionsHtml = '';
+            statuses.forEach(st => {
+                optionsHtml += `<option value="${st}" ${l.status === st ? 'selected' : ''}>${st}</option>`;
+            });
+
+            container.innerHTML += `
+            <div class="lead-card">
+                <button onclick="deleteLead(${l.id}, '${l.company.replace(/'/g, "\\'")}')" style="position:absolute; top:8px; right:8px; background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:bold;" title="Удалить лид">✕</button>
+                <h5>${l.company}</h5>
+                <span class="event-badge badge-segment">${l.segment || 'B2B'}</span>
+                <span class="event-badge badge-author">👤 ${l.author || 'Команда'}</span>
+                <div style="font-size:12px; color:#1e293b; margin:2px 0;"><b>ЛПР:</b> ${l.person || 'Не указан'}</div>
+                <div style="font-size:12px; color:#0369a1; word-break:break-all; margin-bottom:4px;"><b>Связь:</b> ${l.contacts || '—'}</div>
+                ${l.notes ? `<div style="font-size:11px; color:#64748b; margin-bottom:6px;">${l.notes}</div>` : ''}
+                <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
+                    <span style="font-size:11px; font-weight:bold; color:#475569;">Статус:</span>
+                    <select style="padding:2px 4px; font-size:11px; width:auto; flex:1;" onchange="updateLeadStatus(${l.id}, this.value)">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            </div>`;
+        });
+    }
+
     function computeTimeline(promo, start, end, post) {
         const today = new Date();
         today.setHours(0,0,0,0);
@@ -532,7 +639,7 @@
             return { phase: 'phase-active', label: `🚀 Идёт сбор (до финиша ${daysToEnd} дн.)` };
         } else if (dEnd && (!dPost || today <= dPost)) {
             const daysToPost = dPost ? diffDays(dPost) : 0;
-            return { phase: 'phase-post', label: `📦 Постэффект / Лоты (осталось ${daysToPost} дн.)` };
+            return { phase: 'phase-post', label: `📦 Постэффект (осталось ${daysToPost} дн.)` };
         } else {
             return { phase: 'phase-done', label: `🏁 Завершено` };
         }
@@ -596,7 +703,7 @@
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
         
         const context = getLinksContext() + "\n\n" + getProjectsListContext();
-        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, context);
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, context, false);
     }
 
     function renderProjects() {
@@ -656,7 +763,8 @@
         const box = document.getElementById(boxId);
         
         let emptyText = "Жду ваших указаний.";
-        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на готовом проекте.";
+        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на проекте.";
+        if (boxId === 'partnerChatBox') emptyText = "Привет! Я B2B-наставник с доступом к веб-поиску. Выберите проект и сегмент, и мы найдем реальные компании и ЛПР.";
         
         box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
@@ -685,7 +793,7 @@
         }
     }
 
-    async function sendReply(inputId, storageKey, boxId, systemPrompt) {
+    async function sendReply(inputId, storageKey, boxId, systemPrompt, useSearch = false) {
         const text = document.getElementById(inputId).value.trim();
         if(!text) return;
         let history = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -693,13 +801,12 @@
         localStorage.setItem(storageKey, JSON.stringify(history));
         document.getElementById(inputId).value = '';
         renderChatUI(storageKey, boxId);
-        await processTurn(storageKey, boxId, systemPrompt);
+        await processTurn(storageKey, boxId, systemPrompt, "", useSearch);
     }
 
-    // Быстрые кнопки (Quick Action Chips)
-    function quickSend(inputId, promptText, storageKey, boxId, systemPrompt) {
+    function quickSend(inputId, promptText, storageKey, boxId, systemPrompt, useSearch = false) {
         document.getElementById(inputId).value = promptText;
-        sendReply(inputId, storageKey, boxId, systemPrompt);
+        sendReply(inputId, storageKey, boxId, systemPrompt, useSearch);
     }
 
     async function sendBuilderReply() {
@@ -712,7 +819,7 @@
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
         
         const dynamicContext = getLinksContext() + "\n\n" + getProjectsListContext();
-        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, dynamicContext);
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, dynamicContext, false);
     }
 
     function startNewCampaign() {
@@ -737,22 +844,33 @@
         
         localStorage.setItem('theater_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_chat_history', 'chatBox');
-        processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN); 
+        processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN, "", false); 
     }
 
     function startNewPartnerSearch() {
         const projId = document.getElementById('partnerProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
-        const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Поиск ЛПР и партнеров.\nВыдай конкретный план действий:\n1. Кто наши ЛПР (должности).\n2. Где их искать.\n3. Дай 1-2 способа обойти секретаря.\nСпроси меня, что делаем дальше.`;
+        const preset = document.getElementById('targetSegmentSelect').value;
+        
+        const prompt = `${getProjectContext(projId)}
+ЗАДАЧА: Поиск реальных клиентов, ЛПР и организаций в открытом вебе.
+${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
+
+Выполни живой веб-поиск через Google и выдай 3-4 реальные организации (СПб/Москва):
+1. Название компании и сайт.
+2. Профиль и должность ЛПР (кому продавать).
+3. Способ первого захода и хитрый обход привратника.
+Спроси, по какой компании выдать прямой скрипт и сохранить её в базу лидов.`;
+
         localStorage.setItem('theater_partner_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
-        processTurn('theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES);
+        processTurn('theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, "", true);
     }
 
-    async function processTurn(storageKey, boxId, systemPrompt, dynamicContext = "") {
+    async function processTurn(storageKey, boxId, systemPrompt, dynamicContext = "", useSearch = false) {
         let history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
-        box.innerHTML += '<div class="msg model" id="loadingMsg">Печатаю...</div>';
+        box.innerHTML += '<div class="msg model" id="loadingMsg">Печатаю (поиск по вебу)...</div>';
         box.scrollTop = box.scrollHeight;
 
         let apiHistory = JSON.parse(JSON.stringify(history));
@@ -761,10 +879,31 @@
         }
 
         try {
-            let responseText = await fetchGeminiAPI(apiHistory, systemPrompt);
+            let responseText = await fetchGeminiAPI(apiHistory, systemPrompt, useSearch);
             document.getElementById('loadingMsg').remove();
 
-            // Перехват агентных команд
+            // Перехват команды сохранения лида в CRM
+            const leadMatch = responseText.match(/<<<ACTION_SAVE_LEAD:\s*([\s\S]*?)\s*>>>/);
+            if (leadMatch) {
+                try {
+                    let jsonStr = leadMatch[1].replace(/```json/g, '').replace(/```/g, '').trim();
+                    const leadData = JSON.parse(jsonStr);
+                    leadData.scope = 'lead';
+                    leadData.action = 'create';
+                    leadData.id = Date.now();
+                    leadData.author = getCurrentUser();
+                    leadData.status = 'Не отправлено';
+                    
+                    box.innerHTML += `<div class="msg model" style="background:#e0f2fe; color:#0369a1;">🔄 Добавляю компанию «${leadData.company}» в базу лидов...</div>`;
+                    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(leadData) });
+                    await loadProjectsFromCloud();
+                    responseText = responseText.replace(leadMatch[0], `\n📥 **Готово! Компания «${leadData.company}» сохранена в CRM во вкладку «Лиды».**\n`);
+                } catch(e) {
+                    responseText = responseText.replace(leadMatch[0], `\n❌ Ошибка сохранения лида: ${e.message}\n`);
+                }
+            }
+
+            // Перехват команд сборщика проектов
             if (storageKey === 'theater_builder_chat_history') {
                 const deleteMatch = responseText.match(/<<<ACTION_DELETE:\s*(\d+)\s*>>>/);
                 if (deleteMatch) {
@@ -774,9 +913,7 @@
                         box.innerHTML += `<div class="msg model" style="background:#fff3cd; color:#856404;">🔄 ИИ удаляет проект «${p.name}»...</div>`;
                         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: idToDelete }) });
                         await loadProjectsFromCloud();
-                        responseText = responseText.replace(deleteMatch[0], `\n🗑️ **Я выполнил команду: проект «${p.name}» навсегда удален из базы.**\n`);
-                    } else {
-                        responseText = responseText.replace(deleteMatch[0], `\n❌ Я пытался удалить проект, но не нашел его ID в базе.\n`);
+                        responseText = responseText.replace(deleteMatch[0], `\n🗑️ **Проект «${p.name}» навсегда удален из базы.**\n`);
                     }
                 }
 
@@ -784,7 +921,7 @@
                 if (improveMatch) {
                     const idToImprove = parseInt(improveMatch[1]);
                     setTimeout(() => improveProject(idToImprove), 1000);
-                    responseText = responseText.replace(improveMatch[0], `\n✨ **Принято! Запускаю процесс автоматического улучшения...**\n`);
+                    responseText = responseText.replace(improveMatch[0], `\n✨ **Запускаю авто-улучшение...**\n`);
                 }
 
                 const saveMatch = responseText.match(/<<<ACTION_SAVE:\s*([\s\S]*?)\s*>>>/);
@@ -797,9 +934,9 @@
                         box.innerHTML += `<div class="msg model" style="background:#d4edda; color:#155724;">🔄 ИИ сохраняет проект «${projData.name}»...</div>`;
                         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(projData) });
                         await loadProjectsFromCloud();
-                        responseText = responseText.replace(saveMatch[0], `\n✅ **Готово! Проект «${projData.name}» успешно сохранен в облачную базу.**\n`);
+                        responseText = responseText.replace(saveMatch[0], `\n✅ **Проект «${projData.name}» успешно сохранен в облако.**\n`);
                     } catch(e) {
-                        responseText = responseText.replace(saveMatch[0], `\n❌ **Ошибка при авто-сохранении:** ${e.message}\n`);
+                        responseText = responseText.replace(saveMatch[0], `\n❌ **Ошибка авто-сохранения:** ${e.message}\n`);
                     }
                 }
             }
@@ -833,7 +970,7 @@
         const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
         try {
-            const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.");
+            const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.", false);
             document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
             
             const encodedPrompt = encodeURIComponent(engPrompt);
@@ -854,22 +991,29 @@
         }
     }
 
-    async function fetchGeminiAPI(contentsArray, activeSystemPrompt) {
+    async function fetchGeminiAPI(contentsArray, activeSystemPrompt, enableSearch = false) {
         const maxRetries = 3;
         
         while(currentKeyIndex < CONFIG.apiKeys.length) {
             const apiKey = CONFIG.apiKeys[currentKeyIndex];
             const url = `${MODEL_URL}?key=${apiKey}`;
 
+            const requestBody = {
+                systemInstruction: { parts: [{ text: activeSystemPrompt }] },
+                contents: contentsArray
+            };
+
+            // Подключение инструмента веб-поиска Google
+            if (enableSearch) {
+                requestBody.tools = [{ googleSearch: {} }];
+            }
+
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            systemInstruction: { parts: [{ text: activeSystemPrompt }] },
-                            contents: contentsArray
-                        })
+                        body: JSON.stringify(requestBody)
                     });
                     
                     const data = await response.json();
@@ -880,7 +1024,7 @@
                             currentKeyIndex++;
                             updateKeyStatusUI();
                             if (currentKeyIndex >= CONFIG.apiKeys.length) {
-                                throw new Error("⚠️ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
+                                throw new Error("⚠️️ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
                             }
                             break; 
                         }
@@ -888,11 +1032,13 @@
                             if (attempt < maxRetries) { await new Promise(r => setTimeout(r, 2000)); continue; }
                             throw new Error("⚠️ Серверы Google перегружены (503). Повторите запрос.");
                         }
-                        if (code === 400) throw new Error("⚠️ Ошибка 400 (геолокация). Включите VPN.");
+                        if (code === 400) throw new Error("⚠️️ Ошибка 400 (геолокация). Включите VPN.");
                         throw new Error(`⚠️ Ошибка API (${code}): ${data.error.message}`);
                     }
 
-                    if (data.candidates) return data.candidates[0].content.parts[0].text;
+                    if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                        return data.candidates[0].content.parts.map(p => p.text || '').join('');
+                    }
                     throw new Error("⚠️ Неизвестный ответ от нейросети.");
                 } catch (error) {
                     if (attempt === maxRetries || error.message.includes("429") || error.message.includes("ВСЕХ ключах")) {
