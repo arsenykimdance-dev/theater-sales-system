@@ -10,7 +10,7 @@
     <script src="prompt_admin.js"></script>
     <script src="prompt_sales.js"></script>
     <script src="prompt_art.js"></script>
-    <script src="prompt_builder.js"></script> <!-- Наш новый ИИ-Сборщик -->
+    <script src="prompt_builder.js"></script> 
     
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
@@ -46,8 +46,8 @@
         .chat-input-area { display: flex; gap: 10px; margin-top: 10px; }
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
-        .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; }
-        .project-card h4 { margin: 0 0 10px 0; color: #0066cc; }
+        .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; position: relative; }
+        .project-card h4 { margin: 0 80px 10px 0; color: #0066cc; }
         .image-preview { margin-top: 20px; text-align: center; }
         .image-preview img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     </style>
@@ -68,7 +68,7 @@
     <h1>Панель управления продажами</h1>
     <div id="keyStatusBadge" class="key-status">Загрузка ключей...</div>
 
-    <!-- Обновленные вкладки -->
+    <!-- Вкладки -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
         <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <!-- Вкладка 2: База проектов и ИИ-Сборщик (Объединенная) -->
+    <!-- Вкладка 2: База проектов и ИИ-Сборщик -->
     <div class="tab-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Облачная База Проектов</h3>
@@ -113,7 +113,7 @@
         <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold; margin-bottom: 15px;">Связь с сервером Google...</div>
         <div id="projectsList" style="margin-bottom: 30px;"></div>
 
-        <!-- Блок создания проекта и чат ИИ-Сборщика -->
+        <!-- Блок создания проекта -->
         <div style="background: #e9ecef; padding: 15px; border-radius: 4px; border: 1px solid #ccc;">
             <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект</h4>
             <p style="font-size: 13px; color: #666; margin-top: 0;">Заполните поля вручную или воспользуйтесь помощью ИИ-Сборщика ниже.</p>
@@ -194,6 +194,7 @@
 
     let currentKeyIndex = 0;
 
+    // Функция для форматирования Markdown ответов ИИ
     function formatMessage(text) {
         return text
             .replace(/### (.*)/g, '<strong style="font-size: 15px; color: #0066cc; display: block; margin-top: 10px;">$1</strong>')
@@ -235,7 +236,7 @@
 
     window.onload = () => {
         if(typeof CONFIG === 'undefined' || typeof PROMPT_BUILDER === 'undefined') {
-            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js (включая новый prompt_builder.js)");
+            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js (включая prompt_builder.js)");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -284,7 +285,7 @@
             audience: document.getElementById('projAudience').value,
             pain: document.getElementById('projPain').value,
             format: document.getElementById('projFormat').value,
-            check: document.getElementById('projCheck').value, // Наш новый средний чек
+            check: document.getElementById('projCheck').value, 
             argument: document.getElementById('projArgument').value
         };
         
@@ -300,16 +301,39 @@
         }
     }
 
+    async function deleteProject(id, name) {
+        if (!confirm(`Вы уверены, что хотите удалить проект «${name}»?`)) return;
+        if (!confirm(`ВНИМАНИЕ!\n\nПроект «${name}» будет удален НАВСЕГДА из облачной базы. Это действие отменить нельзя.\n\nТочно удаляем?`)) return;
+
+        document.getElementById('cloudLoadingIndicator').style.display = 'block';
+        document.getElementById('cloudLoadingIndicator').innerText = 'Удаление проекта...';
+
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'delete', id: id }) 
+            });
+            await loadProjectsFromCloud(); 
+        } catch(error) {
+            alert("Ошибка удаления: " + error.message);
+        } finally {
+            document.getElementById('cloudLoadingIndicator').innerText = 'Связь с сервером Google...';
+            document.getElementById('cloudLoadingIndicator').style.display = 'none';
+        }
+    }
+
     function renderProjects() {
         const list = document.getElementById('projectsList');
         list.innerHTML = '';
         projectsDB.forEach(p => {
-            // Выводим средний чек в карточку, если он есть
             const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
-            list.innerHTML += `<div class="project-card"><h4>${p.name}</h4>
+            // Вывод карточки с кнопкой удаления
+            list.innerHTML += `<div class="project-card">
+                <h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
                 <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
                 ${checkHtml}
+                <button class="action-btn danger-btn" style="position: absolute; top: 15px; right: 15px; padding: 5px 10px; font-size: 12px; margin: 0;" onclick="deleteProject(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Удалить</button>
                 </div>`;
         });
         const selects = document.querySelectorAll('.dynamic-project-list');
@@ -350,6 +374,7 @@
             const div = document.createElement('div');
             div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
             
+            // Если пишет модель (без ошибки) — применяем markdown
             if (msg.role === 'model' && !msg.isError) {
                 div.innerHTML = formatMessage(msg.parts[0].text);
             } else {
