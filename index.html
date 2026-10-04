@@ -7,10 +7,10 @@
     
     <!-- Подключаем настройки и промпты -->
     <script src="config.js"></script>
-    <script src="prompt_content.js"></script>
     <script src="prompt_admin.js"></script>
     <script src="prompt_sales.js"></script>
     <script src="prompt_art.js"></script>
+    <script src="prompt_builder.js"></script> <!-- Наш новый ИИ-Сборщик -->
     
     <style>
         body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
@@ -68,12 +68,12 @@
     <h1>Панель управления продажами</h1>
     <div id="keyStatusBadge" class="key-status">Загрузка ключей...</div>
 
+    <!-- Обновленные вкладки -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
-        <button class="tab-btn" onclick="switchTab(1)">2. База знаний & Редактор</button>
+        <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
         <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Партнеры</button>
-        <button class="tab-btn" onclick="switchTab(3)">4. Облачная База проектов</button>
-        <button class="tab-btn" onclick="switchTab(4)">5. Визуал & Арт-дирекция</button>
+        <button class="tab-btn" onclick="switchTab(3)">4. Визуал & Арт-дирекция</button>
         <button class="tab-btn" style="background:transparent; color:#666; text-decoration:underline;" onclick="logout()">Выход</button>
     </div>
 
@@ -103,20 +103,52 @@
         </div>
     </div>
 
-    <!-- Вкладка 2: База знаний и Редактор -->
+    <!-- Вкладка 2: База проектов и ИИ-Сборщик (Объединенная) -->
     <div class="tab-content">
-        <h3>ИИ-Методист и работа со ссылками</h3>
-        <div id="linksContainer"></div>
-        <button class="action-btn green-btn" onclick="addLinkField()">+ Добавить ссылку</button>
-
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="action-btn danger-btn" onclick="clearChat('theater_admin_chat_history', 'adminChatBox', 'Чат редактора очищен. Чем могу помочь?')">Очистить чат редактора</button>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Облачная База Проектов</h3>
+            <button class="action-btn" style="padding: 5px 10px; margin-top:0;" onclick="loadProjectsFromCloud()">Обновить базу</button>
         </div>
+        
+        <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold; margin-bottom: 15px;">Связь с сервером Google...</div>
+        <div id="projectsList" style="margin-bottom: 30px;"></div>
 
-        <div class="chat-box" id="adminChatBox"></div>
-        <div class="chat-input-area">
-            <textarea id="adminChatReply" rows="3" placeholder="Попросите улучшить описание проекта..."></textarea>
-            <button class="action-btn" style="margin-top:0;" onclick="sendAdminReply()">Отправить</button>
+        <!-- Блок создания проекта и чат ИИ-Сборщика -->
+        <div style="background: #e9ecef; padding: 15px; border-radius: 4px; border: 1px solid #ccc;">
+            <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект</h4>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Заполните поля вручную или воспользуйтесь помощью ИИ-Сборщика ниже.</p>
+            
+            <input type="text" id="projName" placeholder="Название проекта">
+            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
+            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
+            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории"></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;"><input type="text" id="projFormat" placeholder="Формат (например: онлайн-курс)"></div>
+                <div style="flex:1;"><input type="text" id="projCheck" placeholder="Средний чек (например: 5000 руб)"></div>
+            </div>
+            
+            <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли?)"></textarea>
+            
+            <button class="action-btn green-btn" style="width: 100%;" id="saveProjBtn" onclick="saveProjectToCloud()">Сохранить проект в облако</button>
+            
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
+
+            <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов</h4>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Скиньте ссылки на материалы или просто опишите идею своими словами — бот поможет собрать красивую карточку.</p>
+            
+            <div id="linksContainer"></div>
+            <button class="action-btn" style="background:#6c757d; padding: 5px 15px; font-size:12px;" onclick="addLinkField()">+ Добавить ссылку для контекста</button>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите вашу идею или дайте ссылки, и мы упакуем проект.')">Очистить чат Сборщика</button>
+            </div>
+
+            <div class="chat-box" style="height: 300px; background: #fff;" id="builderChatBox"></div>
+            <div class="chat-input-area">
+                <textarea id="builderChatReply" rows="3" placeholder="Попросите ИИ помочь сформулировать суть или боли..."></textarea>
+                <button class="action-btn" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
+            </div>
         </div>
     </div>
 
@@ -138,28 +170,7 @@
         </div>
     </div>
 
-    <!-- Вкладка 4: База проектов -->
-    <div class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3>Облачная База Проектов</h3>
-            <button class="action-btn" style="padding: 5px 10px; margin-top:0;" onclick="loadProjectsFromCloud()">Обновить базу</button>
-        </div>
-        
-        <div style="background: #e9ecef; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-            <h4>Создать новый проект</h4>
-            <input type="text" id="projName" placeholder="Название проекта и ценовой сегмент">
-            <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
-            <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
-            <textarea id="projPain" rows="2" placeholder="Ключевые боли аудитории"></textarea>
-            <input type="text" id="projFormat" placeholder="Формат (живой тренинг 2 дня, онлайн-курс)">
-            <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли / Виталий Ким?)"></textarea>
-            <button class="action-btn green-btn" id="saveProjBtn" onclick="saveProjectToCloud()">Отправить проект в облако</button>
-        </div>
-        <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold;">Связь с сервером Google...</div>
-        <div id="projectsList"></div>
-    </div>
-
-    <!-- Вкладка 5: Визуал -->
+    <!-- Вкладка 4: Визуал -->
     <div class="tab-content">
         <h3>Арт-дирекция (Генерация визуала)</h3>
         <label>Выберите проект из базы:</label>
@@ -183,7 +194,6 @@
 
     let currentKeyIndex = 0;
 
-    // === НОВАЯ ФУНКЦИЯ ДЛЯ КРАСИВОГО ТЕКСТА ===
     function formatMessage(text) {
         return text
             .replace(/### (.*)/g, '<strong style="font-size: 15px; color: #0066cc; display: block; margin-top: 10px;">$1</strong>')
@@ -224,8 +234,8 @@
     }
 
     window.onload = () => {
-        if(typeof CONFIG === 'undefined' || typeof PROMPT_CONTENT === 'undefined') {
-            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js");
+        if(typeof CONFIG === 'undefined' || typeof PROMPT_BUILDER === 'undefined') {
+            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js (включая новый prompt_builder.js)");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -239,7 +249,7 @@
         addLinkField();
         loadProjectsFromCloud();
         renderChatUI('theater_chat_history', 'chatBox');
-        renderChatUI('theater_admin_chat_history', 'adminChatBox');
+        renderChatUI('theater_builder_chat_history', 'builderChatBox');
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
     }
 
@@ -274,18 +284,19 @@
             audience: document.getElementById('projAudience').value,
             pain: document.getElementById('projPain').value,
             format: document.getElementById('projFormat').value,
+            check: document.getElementById('projCheck').value, // Наш новый средний чек
             argument: document.getElementById('projArgument').value
         };
         
         try {
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(proj) });
-            ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projArgument'].forEach(id => document.getElementById(id).value = '');
+            ['projName', 'projEssence', 'projAudience', 'projPain', 'projFormat', 'projCheck', 'projArgument'].forEach(id => document.getElementById(id).value = '');
             await loadProjectsFromCloud();
             alert("Проект сохранен в облако!");
         } catch(error) {
             alert("Ошибка сохранения: " + error.message);
         } finally {
-            btn.innerText = "Отправить проект в облако"; btn.disabled = false;
+            btn.innerText = "Сохранить проект в облако"; btn.disabled = false;
         }
     }
 
@@ -293,9 +304,13 @@
         const list = document.getElementById('projectsList');
         list.innerHTML = '';
         projectsDB.forEach(p => {
+            // Выводим средний чек в карточку, если он есть
+            const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
             list.innerHTML += `<div class="project-card"><h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
-                <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p></div>`;
+                <p style="font-size:13px; margin:5px 0;"><b>Аудитория:</b> ${p.audience}</p>
+                ${checkHtml}
+                </div>`;
         });
         const selects = document.querySelectorAll('.dynamic-project-list');
         selects.forEach(select => {
@@ -307,7 +322,7 @@
     function getProjectContext(projectId) {
         const p = projectsDB.find(x => x.id == projectId);
         if(!p) return "";
-        return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nНаш аргумент: ${p.argument}\n`;
+        return `КОНТЕКСТ ПРОЕКТА:\nНазвание: ${p.name}\nСуть: ${p.essence}\nЦА: ${p.audience}\nБоли: ${p.pain}\nФормат: ${p.format}\nСредний чек: ${p.check || 'не указан'}\nНаш аргумент: ${p.argument}\n`;
     }
 
     function addLinkField() {
@@ -322,17 +337,19 @@
         return links.length > 0 ? "\nОБЯЗАТЕЛЬНЫЙ КОНТЕКСТ ИЗ ССЫЛОК:\n" + links.join("\n") : "";
     }
 
-    // === ОБНОВЛЕННАЯ ФУНКЦИЯ ОТРИСОВКИ ЧАТА ===
     function renderChatUI(storageKey, boxId) {
         const history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
-        box.innerHTML = history.length === 0 ? '<div class="msg model">Жду ваших указаний.</div>' : '';
+        
+        let emptyText = "Жду ваших указаний.";
+        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите вашу идею или дайте ссылки, и мы упакуем проект.";
+        
+        box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
         history.forEach(msg => {
             const div = document.createElement('div');
             div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
             
-            // Если пишет бот (модель) и это не ошибка, пропускаем через функцию красоты
             if (msg.role === 'model' && !msg.isError) {
                 div.innerHTML = formatMessage(msg.parts[0].text);
             } else {
@@ -362,15 +379,15 @@
         await processTurn(storageKey, boxId, systemPrompt);
     }
 
-    async function sendAdminReply() {
-        const text = document.getElementById('adminChatReply').value.trim();
+    async function sendBuilderReply() {
+        const text = document.getElementById('builderChatReply').value.trim();
         if(!text) return;
-        let history = JSON.parse(localStorage.getItem('theater_admin_chat_history')) || [];
+        let history = JSON.parse(localStorage.getItem('theater_builder_chat_history')) || [];
         history.push({ role: 'user', parts: [{ text: text }] });
-        localStorage.setItem('theater_admin_chat_history', JSON.stringify(history));
-        document.getElementById('adminChatReply').value = '';
-        renderChatUI('theater_admin_chat_history', 'adminChatBox');
-        await processTurn('theater_admin_chat_history', 'adminChatBox', PROMPT_ADMIN, getLinksContext());
+        localStorage.setItem('theater_builder_chat_history', JSON.stringify(history));
+        document.getElementById('builderChatReply').value = '';
+        renderChatUI('theater_builder_chat_history', 'builderChatBox');
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, getLinksContext());
     }
 
     function startNewCampaign() {
