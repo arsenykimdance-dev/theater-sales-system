@@ -48,8 +48,9 @@
         
         .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; position: relative; }
         .project-card h4 { margin: 0 80px 10px 0; color: #0066cc; }
-        .image-preview { margin-top: 20px; text-align: center; }
-        .image-preview img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .image-preview { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+        .image-preview img { border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: cover; }
     </style>
 </head>
 <body>
@@ -113,7 +114,6 @@
         <div id="cloudLoadingIndicator" style="color:#0066cc; font-weight:bold; margin-bottom: 15px;">Связь с сервером Google...</div>
         <div id="projectsList" style="margin-bottom: 30px;"></div>
 
-        <!-- Блок создания проекта -->
         <div style="background: #e9ecef; padding: 15px; border-radius: 4px; border: 1px solid #ccc;">
             <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект</h4>
             <p style="font-size: 13px; color: #666; margin-top: 0;">Заполните поля вручную или воспользуйтесь помощью ИИ-Сборщика ниже.</p>
@@ -129,7 +129,6 @@
             </div>
             
             <textarea id="projArgument" rows="2" placeholder="Главный аргумент (Почему Театр Земли?)"></textarea>
-            
             <button class="action-btn green-btn" style="width: 100%;" id="saveProjBtn" onclick="saveProjectToCloud()">Сохранить проект в облако</button>
             
             <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
@@ -176,12 +175,42 @@
         <label>Выберите проект из базы:</label>
         <select id="artProjectSelect" class="dynamic-project-list"><option>Загрузка из облака...</option></select>
         
+        <!-- НОВЫЙ БЛОК НАСТРОЕК ГЕНЕРАЦИИ -->
+        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <div style="flex:1; min-width: 140px;">
+                <label style="margin-top:0;">Стиль / Движок:</label>
+                <select id="artModel">
+                    <option value="flux">Flux (Реализм, топ-качество)</option>
+                    <option value="turbo">Turbo (Быстрая генерация)</option>
+                    <option value="any-dark">AnyDark (Мрачный, нуарный)</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width: 140px;">
+                <label style="margin-top:0;">Формат картинки:</label>
+                <select id="artFormat">
+                    <option value="1024x1024">Квадрат (Пост)</option>
+                    <option value="768x1344">Вертикальный (Сторис/Reels)</option>
+                    <option value="1344x768">Горизонтальный (Обложка)</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width: 140px;">
+                <label style="margin-top:0;">Количество:</label>
+                <select id="artCount">
+                    <option value="1">1 вариант</option>
+                    <option value="2">2 варианта</option>
+                    <option value="4">4 варианта</option>
+                </select>
+            </div>
+        </div>
+
         <label>Дополнительные пожелания к картинке (опционально):</label>
         <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, стиль нуар...">
 
         <button class="action-btn" onclick="generateVisual()">Создать визуал через ИИ</button>
         
-        <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует кадр...</div>
+        <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует...</div>
+        
+        <!-- Сюда прилетят картинки (они выстроятся в сетку) -->
         <div class="image-preview" id="imagePreviewContainer"></div>
         <div id="artPromptDisplay" style="margin-top:15px; font-size:12px; color:#666; font-family:monospace;"></div>
     </div>
@@ -194,7 +223,6 @@
 
     let currentKeyIndex = 0;
 
-    // Функция для форматирования Markdown ответов ИИ
     function formatMessage(text) {
         return text
             .replace(/### (.*)/g, '<strong style="font-size: 15px; color: #0066cc; display: block; margin-top: 10px;">$1</strong>')
@@ -236,7 +264,7 @@
 
     window.onload = () => {
         if(typeof CONFIG === 'undefined' || typeof PROMPT_BUILDER === 'undefined') {
-            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js (включая prompt_builder.js)");
+            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -327,7 +355,6 @@
         list.innerHTML = '';
         projectsDB.forEach(p => {
             const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
-            // Вывод карточки с кнопкой удаления
             list.innerHTML += `<div class="project-card">
                 <h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
@@ -374,7 +401,6 @@
             const div = document.createElement('div');
             div.className = `msg ${msg.role} ${msg.isError ? 'error-msg' : ''}`;
             
-            // Если пишет модель (без ошибки) — применяем markdown
             if (msg.role === 'model' && !msg.isError) {
                 div.innerHTML = formatMessage(msg.parts[0].text);
             } else {
@@ -473,10 +499,17 @@
         }
     }
 
+    // === ОБНОВЛЕННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ВИЗУАЛА ===
     async function generateVisual() {
         const projId = document.getElementById('artProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
+        
         const customReq = document.getElementById('artCustomRequest').value.trim();
+        const modelName = document.getElementById('artModel').value;
+        const formatStr = document.getElementById('artFormat').value;
+        const count = parseInt(document.getElementById('artCount').value);
+        
+        const [width, height] = formatStr.split('x');
         
         document.getElementById('artLoading').style.display = 'block';
         document.getElementById('imagePreviewContainer').innerHTML = '';
@@ -485,12 +518,25 @@
         const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
         try {
-            const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director.");
+            // 1. Просим ИИ написать 1 идеальный промпт
+            const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.");
             document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
-            const seed = Math.floor(Math.random() * 100000);
+            
             const encodedPrompt = encodeURIComponent(engPrompt);
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
-            document.getElementById('imagePreviewContainer').innerHTML = `<img src="${imgUrl}" alt="Визуал">`;
+            let imagesHtml = '';
+            
+            // 2. Генерируем нужное количество картинок через цикл
+            for(let i = 0; i < count; i++) {
+                const seed = Math.floor(Math.random() * 1000000);
+                const imgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=${modelName}`;
+                
+                // Вычисляем ширину картинки для красивой сетки: если 1 картинка - 100%, если больше - 48% (по две в ряд)
+                const flexBasis = count === 1 ? '100%' : 'calc(50% - 15px)';
+                
+                imagesHtml += `<img src="${imgUrl}" alt="Вариант ${i+1}" style="flex: 1 1 ${flexBasis}; max-width: 100%;">`;
+            }
+            
+            document.getElementById('imagePreviewContainer').innerHTML = imagesHtml;
             document.getElementById('artLoading').style.display = 'none';
         } catch(error) {
             document.getElementById('artLoading').style.display = 'none';
