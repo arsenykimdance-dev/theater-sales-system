@@ -113,7 +113,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
             <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
-            <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Поиск ЛПР (Web Search)</button>
+            <button class="tab-btn" onclick="switchTab(2)">3. Продажи & Поиск ЛПР</button>
             <button class="tab-btn" onclick="switchTab(3)">4. Визуал & Арт-дирекция</button>
             <button class="tab-btn" style="background:transparent; color:#666; text-decoration:underline;" onclick="logout()">Выход</button>
         </div>
@@ -201,9 +201,9 @@
             </div>
         </div>
 
-        <!-- Вкладка 3: Продажи с Web Search -->
+        <!-- Вкладка 3: Продажи -->
         <div class="tab-content">
-            <h3>Поиск клиентов, ЛПР и организаций (Google Search)</h3>
+            <h3>Поиск клиентов, ЛПР и организаций</h3>
             
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <div style="flex: 2; min-width: 200px;">
@@ -223,7 +223,8 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                <button class="action-btn green-btn" onclick="startNewPartnerSearch()">🌐 Найти реальные компании через Web Search</button>
+                <button class="action-btn" onclick="startNewPartnerHunt()">🎯 Начать охоту за клиентами</button>
+                <button class="action-btn green-btn" onclick="startNewPartnerSearch()">🌐 Найти компании через Web Search</button>
                 <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат продаж очищен.')">Очистить чат</button>
             </div>
 
@@ -231,12 +232,12 @@
             <div class="quick-chips">
                 <span class="chip" onclick="quickSend('partnerChatReply', 'Найди контакты ЛПР и открытые каналы связи по этим компаниям через веб-поиск', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">🔍 Найти прямые контакты</span>
                 <span class="chip" onclick="quickSend('partnerChatReply', 'Сохрани найденную компанию как лид в облачную базу', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">📥 Сохрани лид в базу</span>
-                <span class="chip" onclick="quickSend('partnerChatReply', 'Напиши персонализированный скрипт первого касания для этого ЛПР', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">✉️ Напиши скрипт</span>
-                <span class="chip" onclick="quickSend('partnerChatReply', 'Дай 2 хитрых способа обойти секретаря по телефону', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">🎭 Обход секретаря</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Напиши персонализированный скрипт первого касания для этого ЛПР', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, false)">✉️ Напиши скрипт</span>
+                <span class="chip" onclick="quickSend('partnerChatReply', 'Дай 2 хитрых способа обойти секретаря по телефону', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, false)">🎭 Обход секретаря</span>
             </div>
             <div class="chat-input-area">
-                <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос или попросите найти конкретные компании..."></textarea>
-                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, true)">Отправить</button>
+                <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос наставнику или укажите компанию..."></textarea>
+                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, false)">Отправить</button>
             </div>
         </div>
 
@@ -311,7 +312,7 @@
 
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
-    const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+    const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
     let currentKeyIndex = 0;
     let projectsDB = [];
@@ -551,7 +552,6 @@
         }
     }
 
-    // === CRM ЛИДОВ ===
     async function updateLeadStatus(leadId, newStatus) {
         try {
             await fetch(SCRIPT_URL, {
@@ -764,7 +764,7 @@
         
         let emptyText = "Жду ваших указаний.";
         if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на проекте.";
-        if (boxId === 'partnerChatBox') emptyText = "Привет! Я B2B-наставник с доступом к веб-поиску. Выберите проект и сегмент, и мы найдем реальные компании и ЛПР.";
+        if (boxId === 'partnerChatBox') emptyText = "Привет! Я B2B-наставник. Запустите «Охоту за клиентами» или воспользуйтесь Web Search для поиска реальных контактов.";
         
         box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
@@ -847,6 +847,16 @@
         processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN, "", false); 
     }
 
+    // Возвращенная кнопка "Охота за клиентами"
+    function startNewPartnerHunt() {
+        const projId = document.getElementById('partnerProjectSelect').value;
+        if(!projId) { alert('Выберите проект!'); return; }
+        const prompt = `${getProjectContext(projId)}\nЗАДАЧА: Поиск ЛПР и партнеров.\nНачинай работу по методике: проведи меня по шагам (ЭТАП 1: выбор целевых должностей ЛПР под этот проект). Предложи 3 конкретные должности и спроси, с кого начнем охоту.`;
+        localStorage.setItem('theater_partner_chat_history', JSON.stringify([{ role: 'user', parts: [{ text: prompt }] }]));
+        renderChatUI('theater_partner_chat_history', 'partnerChatBox');
+        processTurn('theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, "", false);
+    }
+
     function startNewPartnerSearch() {
         const projId = document.getElementById('partnerProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
@@ -856,7 +866,7 @@
 ЗАДАЧА: Поиск реальных клиентов, ЛПР и организаций в открытом вебе.
 ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
 
-Выполни живой веб-поиск через Google и выдай 3-4 реальные организации (СПб/Москва):
+Выполни живой веб-поиск через Google и найди 3-4 реальные действующие организации (СПб/Москва):
 1. Название компании и сайт.
 2. Профиль и должность ЛПР (кому продавать).
 3. Способ первого захода и хитрый обход привратника.
@@ -870,7 +880,7 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
     async function processTurn(storageKey, boxId, systemPrompt, dynamicContext = "", useSearch = false) {
         let history = JSON.parse(localStorage.getItem(storageKey)) || [];
         const box = document.getElementById(boxId);
-        box.innerHTML += '<div class="msg model" id="loadingMsg">Печатаю (поиск по вебу)...</div>';
+        box.innerHTML += `<div class="msg model" id="loadingMsg">Печатаю${useSearch ? ' (поиск по вебу)' : ''}...</div>`;
         box.scrollTop = box.scrollHeight;
 
         let apiHistory = JSON.parse(JSON.stringify(history));
@@ -913,7 +923,7 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                         box.innerHTML += `<div class="msg model" style="background:#fff3cd; color:#856404;">🔄 ИИ удаляет проект «${p.name}»...</div>`;
                         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: idToDelete }) });
                         await loadProjectsFromCloud();
-                        responseText = responseText.replace(deleteMatch[0], `\n🗑️ **Проект «${p.name}» навсегда удален из базы.**\n`);
+                        responseText = responseText.replace(deleteMatch[0], `\n🗑️️ **Проект «${p.name}» навсегда удален из базы.**\n`);
                     }
                 }
 
@@ -1003,7 +1013,6 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                 contents: contentsArray
             };
 
-            // Подключение инструмента веб-поиска Google
             if (enableSearch) {
                 requestBody.tools = [{ googleSearch: {} }];
             }
@@ -1024,15 +1033,15 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                             currentKeyIndex++;
                             updateKeyStatusUI();
                             if (currentKeyIndex >= CONFIG.apiKeys.length) {
-                                throw new Error("⚠️️ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
+                                throw new Error("⚠ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
                             }
                             break; 
                         }
                         if (code === 503) {
                             if (attempt < maxRetries) { await new Promise(r => setTimeout(r, 2000)); continue; }
-                            throw new Error("⚠️ Серверы Google перегружены (503). Повторите запрос.");
+                            throw new Error("⚠️️ Серверы Google перегружены (503). Повторите запрос.");
                         }
-                        if (code === 400) throw new Error("⚠️️ Ошибка 400 (геолокация). Включите VPN.");
+                        if (code === 400) throw new Error("⚠ Ошибка 400 (геолокация). Включите VPN.");
                         throw new Error(`⚠️ Ошибка API (${code}): ${data.error.message}`);
                     }
 
