@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление продажами — Театр Земли & KIM.FILM</title>
     
-    <!-- Подключаем настройки и промпты -->
     <script src="config.js"></script>
     <script src="prompt_admin.js"></script>
     <script src="prompt_sales.js"></script>
@@ -47,7 +46,6 @@
         .chat-input-area textarea { flex-grow: 1; resize: none; }
         
         .project-card { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 10px; border-radius: 4px; position: relative; }
-        /* Даем отступ заголовку, чтобы кнопки не налезали на длинный текст */
         .project-card h4 { margin: 0 170px 10px 0; color: #0066cc; } 
         
         .image-preview { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
@@ -70,7 +68,6 @@
     <h1>Панель управления продажами</h1>
     <div id="keyStatusBadge" class="key-status">Загрузка ключей...</div>
 
-    <!-- Вкладки -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab(0)">1. Контент & Продвижение</button>
         <button class="tab-btn" onclick="switchTab(1)">2. База проектов & ИИ-Сборщик</button>
@@ -116,9 +113,7 @@
         <div id="projectsList" style="margin-bottom: 30px;"></div>
 
         <div style="background: #e9ecef; padding: 15px; border-radius: 4px; border: 1px solid #ccc;">
-            <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект</h4>
-            <p style="font-size: 13px; color: #666; margin-top: 0;">Заполните поля вручную или воспользуйтесь помощью ИИ-Сборщика ниже.</p>
-            
+            <h4 style="margin-top:0; color:#1a1a1a;">Создать новый проект вручную</h4>
             <input type="text" id="projName" placeholder="Название проекта">
             <textarea id="projEssence" rows="2" placeholder="Суть проекта и главная метафора"></textarea>
             <textarea id="projAudience" rows="2" placeholder="Целевая аудитория и ЛПР"></textarea>
@@ -134,19 +129,19 @@
             
             <hr style="border: 0; border-top: 1px solid #ddd; margin: 25px 0;">
 
-            <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов</h4>
-            <p style="font-size: 13px; color: #666; margin-top: 0;">Скиньте ссылки на материалы, опишите идею своими словами или нажмите кнопку "Улучшить" на карточке проекта.</p>
+            <h4 style="margin-top:0; color:#1a1a1a;">ИИ-Сборщик проектов (Управление Базой)</h4>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Скажите боту "сохрани", "удали проект Х" или попросите помочь с текстом.</p>
             
             <div id="linksContainer"></div>
             <button class="action-btn" style="background:#6c757d; padding: 5px 15px; font-size:12px;" onclick="addLinkField()">+ Добавить ссылку для контекста</button>
 
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите вашу идею, дайте ссылки или нажмите «Улучшить» на готовом проекте.')">Очистить чат Сборщика</button>
+                <button class="action-btn danger-btn" onclick="clearChat('theater_builder_chat_history', 'builderChatBox', 'Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на готовом проекте.')">Очистить чат Сборщика</button>
             </div>
 
             <div class="chat-box" style="height: 300px; background: #fff;" id="builderChatBox"></div>
             <div class="chat-input-area">
-                <textarea id="builderChatReply" rows="3" placeholder="Попросите ИИ помочь сформулировать суть или боли..."></textarea>
+                <textarea id="builderChatReply" rows="3" placeholder="Попросите бота сохранить, удалить или улучшить проект..."></textarea>
                 <button class="action-btn" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
             </div>
         </div>
@@ -216,7 +211,6 @@
 </div>
 
 <script>
-    // === ССЫЛКА НА ВАШУ БАЗУ ДАННЫХ ===
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjGjBPJ87H2PBrSVx76knsEDgqXYHuama4gcXeiIa8Wq7HuYdJdP9bAPPIuMXX9CU5Mw/exec';
     const MODEL_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 
@@ -263,7 +257,7 @@
 
     window.onload = () => {
         if(typeof CONFIG === 'undefined' || typeof PROMPT_BUILDER === 'undefined') {
-            alert("Ошибка: Убедитесь, что загрузили на GitHub файлы config.js и все файлы prompt_*.js");
+            alert("Ошибка: Убедитесь, что загрузили на GitHub все JS-файлы.");
         }
         if(sessionStorage.getItem('theater_logged_in') === 'true') {
             document.getElementById('loginOverlay').style.display = 'none';
@@ -300,6 +294,14 @@
         }
     }
 
+    // НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕДАЧИ СПИСКА ПРОЕКТОВ БОТУ
+    function getProjectsListContext() {
+        if (projectsDB.length === 0) return "База проектов пока пуста.";
+        let ctx = "СПИСОК ТЕКУЩИХ ПРОЕКТОВ В БАЗЕ (Используй ID для команд):\n";
+        projectsDB.forEach(p => { ctx += `ID: ${p.id} | Название: ${p.name}\n`; });
+        return ctx;
+    }
+
     async function saveProjectToCloud() {
         const name = document.getElementById('projName').value.trim();
         if(!name) { alert("Укажите хотя бы название проекта!"); return; }
@@ -330,16 +332,13 @@
 
     async function deleteProject(id, name) {
         if (!confirm(`Вы уверены, что хотите удалить проект «${name}»?`)) return;
-        if (!confirm(`ВНИМАНИЕ!\n\nПроект «${name}» будет удален НАВСЕГДА из облачной базы. Это действие отменить нельзя.\n\nТочно удаляем?`)) return;
+        if (!confirm(`ВНИМАНИЕ!\n\nПроект «${name}» будет удален НАВСЕГДА. Точно удаляем?`)) return;
 
         document.getElementById('cloudLoadingIndicator').style.display = 'block';
         document.getElementById('cloudLoadingIndicator').innerText = 'Удаление проекта...';
 
         try {
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'delete', id: id }) 
-            });
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
             await loadProjectsFromCloud(); 
         } catch(error) {
             alert("Ошибка удаления: " + error.message);
@@ -349,12 +348,9 @@
         }
     }
 
-    // === НОВАЯ ФУНКЦИЯ ДЛЯ УЛУЧШЕНИЯ ПРОЕКТА ===
     async function improveProject(id) {
         const p = projectsDB.find(x => x.id == id);
         if(!p) return;
-
-        // Плавно скроллим страницу вниз к чату Сборщика
         document.getElementById('builderChatBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         const prompt = `ЗАДАЧА: Улучшить существующий проект.
@@ -367,15 +363,17 @@
 6. Средний чек: ${p.check || 'пусто'}
 7. Главный аргумент: ${p.argument || 'пусто'}
 
-Пожалуйста, проанализируй эту информацию. Самостоятельно заполни пустые места (предложи лучшие гипотезы), исправь слабые или непонятные формулировки и сделай описание максимально сильным, четким и продающим. 
-Выдай мне готовую улучшенную карточку по всем 7 пунктам.`;
+Пожалуйста, проанализируй эту информацию. Заполни пустые места, исправь слабые формулировки и сделай описание продающим. Выдай готовую улучшенную карточку и спроси: Сохранить этот вариант?`;
 
         let history = JSON.parse(localStorage.getItem('theater_builder_chat_history')) || [];
         history.push({ role: 'user', parts: [{ text: prompt }] });
         localStorage.setItem('theater_builder_chat_history', JSON.stringify(history));
         
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
-        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, getLinksContext());
+        
+        // Отправляем с контекстом ссылок и списком проектов
+        const context = getLinksContext() + "\n\n" + getProjectsListContext();
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, context);
     }
 
     function renderProjects() {
@@ -383,7 +381,6 @@
         list.innerHTML = '';
         projectsDB.forEach(p => {
             const checkHtml = p.check ? `<p style="font-size:13px; margin:5px 0;"><b>Средний чек:</b> ${p.check}</p>` : '';
-            // Вывод карточки с двумя кнопками
             list.innerHTML += `<div class="project-card">
                 <h4>${p.name}</h4>
                 <p style="font-size:13px; margin:5px 0;"><b>Суть:</b> ${p.essence}</p>
@@ -425,7 +422,7 @@
         const box = document.getElementById(boxId);
         
         let emptyText = "Жду ваших указаний.";
-        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите вашу идею, дайте ссылки или нажмите «Улучшить» на готовом проекте.";
+        if (boxId === 'builderChatBox') emptyText = "Привет! Я ИИ-Сборщик. Опишите идею, дайте команду на сохранение/удаление или нажмите «Улучшить» на готовом проекте.";
         
         box.innerHTML = history.length === 0 ? `<div class="msg model">${emptyText}</div>` : '';
         
@@ -438,7 +435,6 @@
             } else {
                 div.innerText = msg.parts[0].text; 
             }
-            
             box.appendChild(div);
         });
         box.scrollTop = box.scrollHeight;
@@ -470,7 +466,10 @@
         localStorage.setItem('theater_builder_chat_history', JSON.stringify(history));
         document.getElementById('builderChatReply').value = '';
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
-        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, getLinksContext());
+        
+        // Отправляем контекст + актуальный список проектов
+        const dynamicContext = getLinksContext() + "\n\n" + getProjectsListContext();
+        await processTurn('theater_builder_chat_history', 'builderChatBox', PROMPT_BUILDER, dynamicContext);
     }
 
     function startNewCampaign() {
@@ -518,8 +517,55 @@
         }
 
         try {
-            const responseText = await fetchGeminiAPI(apiHistory, systemPrompt);
+            let responseText = await fetchGeminiAPI(apiHistory, systemPrompt);
             document.getElementById('loadingMsg').remove();
+
+            // ==========================================
+            // ПЕРЕХВАТ И ВЫПОЛНЕНИЕ "МАГИЧЕСКИХ КОМАНД"
+            // ==========================================
+            if (storageKey === 'theater_builder_chat_history') {
+                
+                // КОМАНДА: УДАЛИТЬ
+                const deleteMatch = responseText.match(/<<<ACTION_DELETE:\s*(\d+)\s*>>>/);
+                if (deleteMatch) {
+                    const idToDelete = parseInt(deleteMatch[1]);
+                    const p = projectsDB.find(x => x.id == idToDelete);
+                    if (p) {
+                        box.innerHTML += `<div class="msg model" style="background:#fff3cd; color:#856404;">🔄 ИИ удаляет проект «${p.name}»...</div>`;
+                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: idToDelete }) });
+                        await loadProjectsFromCloud();
+                        responseText = responseText.replace(deleteMatch[0], `\n🗑️ **Я выполнил команду: проект «${p.name}» навсегда удален из базы.**\n`);
+                    } else {
+                        responseText = responseText.replace(deleteMatch[0], `\n❌ Я пытался удалить проект, но не нашел его ID в базе.\n`);
+                    }
+                }
+
+                // КОМАНДА: УЛУЧШИТЬ
+                const improveMatch = responseText.match(/<<<ACTION_IMPROVE:\s*(\d+)\s*>>>/);
+                if (improveMatch) {
+                    const idToImprove = parseInt(improveMatch[1]);
+                    setTimeout(() => improveProject(idToImprove), 1000);
+                    responseText = responseText.replace(improveMatch[0], `\n✨ **Принято! Запускаю процесс автоматического улучшения...**\n`);
+                }
+
+                // КОМАНДА: СОХРАНИТЬ
+                const saveMatch = responseText.match(/<<<ACTION_SAVE:\s*([\s\S]*?)\s*>>>/);
+                if (saveMatch) {
+                    try {
+                        let jsonStr = saveMatch[1].replace(/```json/g, '').replace(/```/g, '').trim();
+                        const projData = JSON.parse(jsonStr);
+                        projData.id = Date.now();
+                        box.innerHTML += `<div class="msg model" style="background:#d4edda; color:#155724;">🔄 ИИ сохраняет проект «${projData.name}»...</div>`;
+                        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(projData) });
+                        await loadProjectsFromCloud();
+                        responseText = responseText.replace(saveMatch[0], `\n✅ **Готово! Проект «${projData.name}» успешно сохранен в облачную базу.**\nВы можете увидеть его в списке выше.\n`);
+                    } catch(e) {
+                        responseText = responseText.replace(saveMatch[0], `\n❌ **Я попытался сохранить проект, но произошла ошибка:** ${e.message}\n`);
+                    }
+                }
+            }
+            // ==========================================
+
             history.push({ role: 'model', parts: [{ text: responseText }] });
             localStorage.setItem(storageKey, JSON.stringify(history));
             renderChatUI(storageKey, boxId);
