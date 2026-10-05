@@ -27,9 +27,10 @@
         .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .login-box button { width: 100%; background: #333; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        .key-status { position: absolute; top: 20px; right: 30px; background: #e2f0d9; color: #385723; padding: 5px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; border: 1px solid #c5e0b4; }
-        .key-status.warning { background: #fff2cc; color: #7f6000; border-color: #ffe699; }
-        .key-status.error { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
+        .header-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .rate-badge { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; border: 1px solid #c5e0b4; background: #e2f0d9; color: #2e5917; }
+        .rate-badge.warning { background: #fff2cc; color: #856404; border-color: #ffeeba; }
+        .rate-badge.danger { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
 
         h1 { font-size: 22px; color: #1a1a1a; margin-top: 0; }
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -40,14 +41,15 @@
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 13px; }
         input[type="text"], input[type="date"], input[type="url"], select, textarea { width: 100%; padding: 9px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 13px; }
         
-        button.action-btn { margin-top: 12px; background: #0066cc; color: #fff; padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
-        button.action-btn:hover { background: #004999; }
+        button.action-btn { margin-top: 12px; background: #0066cc; color: #fff; padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.15s, opacity 0.15s; }
+        button.action-btn:hover:not(:disabled) { background: #004999; }
+        button.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         button.danger-btn { background: #cc0000; }
-        button.danger-btn:hover { background: #a00000; }
+        button.danger-btn:hover:not(:disabled) { background: #a00000; }
         button.green-btn { background: #28a745; }
-        button.green-btn:hover { background: #218838; }
+        button.green-btn:hover:not(:disabled) { background: #218838; }
         button.purple-btn { background: #6f42c1; }
-        button.purple-btn:hover { background: #5a32a3; }
+        button.purple-btn:hover:not(:disabled) { background: #5a32a3; }
         
         .chat-box { height: 420px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-top: 18px; border-radius: 6px; display: flex; flex-direction: column; gap: 12px; }
         .msg { padding: 12px 14px; border-radius: 8px; max-width: 88%; line-height: 1.5; font-size: 14px; position: relative; } 
@@ -59,8 +61,9 @@
         .copy-btn:hover { background: #e2e8f0; }
 
         .quick-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-        .chip { background: #e9ecef; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; color: #495057; transition: background 0.15s; }
+        .chip { background: #e9ecef; border: 1px solid #ced4da; padding: 4px 10px; border-radius: 12px; font-size: 12px; cursor: pointer; color: #495057; transition: background 0.15s; user-select: none; }
         .chip:hover { background: #dee2e6; color: #000; }
+        .chip.disabled { pointer-events: none; opacity: 0.5; }
 
         .chat-input-area { display: flex; gap: 10px; margin-top: 8px; }
         .chat-input-area textarea { flex-grow: 1; resize: none; font-size: 13px; }
@@ -102,11 +105,12 @@
 <div class="app-layout" id="mainApp" style="display: none;">
     <!-- Левая колонка -->
     <div class="main-column">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-bottom: 15px; flex-wrap:wrap; gap:10px;">
             <h1 style="border:none; margin:0; padding:0;">Управление продажами & AI</h1>
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div class="header-badges">
                 <span id="userBadge" style="font-size:12px; font-weight:bold; color:#0369a1; background:#e0f2fe; padding:4px 8px; border-radius:12px;">👤 Вход...</span>
-                <div id="keyStatusBadge" class="key-status" style="position:static;">Загрузка ключей...</div>
+                <span id="rateLimitBadge" class="rate-badge">⚡ Нагрузка: 0/10 в мин</span>
+                <span id="keyStatusBadge" class="rate-badge">🟢 Ротация ключей</span>
             </div>
         </div>
 
@@ -133,7 +137,7 @@
             </div>
 
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="action-btn" onclick="startNewCampaign()">Начать стратегию с ИИ</button>
+                <button class="action-btn send-btn-ctrl" onclick="startNewCampaign()">Начать стратегию с ИИ</button>
                 <button class="action-btn purple-btn" onclick="createEventFromInputs()">📌 Создать событие в воронку</button>
                 <button class="action-btn danger-btn" onclick="clearChat('theater_chat_history', 'chatBox', 'Чат контента очищен.')">Очистить историю</button>
             </div>
@@ -147,7 +151,7 @@
             </div>
             <div class="chat-input-area">
                 <textarea id="chatReply" rows="2" placeholder="Напишите ответ ИИ..."></textarea>
-                <button class="action-btn" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
+                <button class="action-btn send-btn-ctrl" style="margin-top:0;" onclick="sendReply('chatReply', 'theater_chat_history', 'chatBox', PROMPT_ADMIN)">Отправить</button>
             </div>
         </div>
 
@@ -196,7 +200,7 @@
                 </div>
                 <div class="chat-input-area">
                     <textarea id="builderChatReply" rows="2" placeholder="Попросите бота сохранить, удалить или улучшить проект..."></textarea>
-                    <button class="action-btn" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
+                    <button class="action-btn send-btn-ctrl" style="margin-top:0;" onclick="sendBuilderReply()">Отправить</button>
                 </div>
             </div>
         </div>
@@ -223,8 +227,8 @@
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                <button class="action-btn" onclick="startNewPartnerHunt()">🎯 Начать охоту за клиентами</button>
-                <button class="action-btn green-btn" onclick="startNewPartnerSearch()">🌐 Найти компании через Web Search</button>
+                <button class="action-btn send-btn-ctrl" onclick="startNewPartnerHunt()">🎯 Начать охоту за клиентами</button>
+                <button class="action-btn green-btn send-btn-ctrl" onclick="startNewPartnerSearch()">🌐 Найти компании через Web Search</button>
                 <button class="action-btn danger-btn" onclick="clearChat('theater_partner_chat_history', 'partnerChatBox', 'Чат продаж очищен.')">Очистить чат</button>
             </div>
 
@@ -237,7 +241,7 @@
             </div>
             <div class="chat-input-area">
                 <textarea id="partnerChatReply" rows="2" placeholder="Задайте вопрос наставнику или укажите компанию..."></textarea>
-                <button class="action-btn green-btn" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, false)">Отправить</button>
+                <button class="action-btn green-btn send-btn-ctrl" style="margin-top:0;" onclick="sendReply('partnerChatReply', 'theater_partner_chat_history', 'partnerChatBox', PROMPT_SALES, false)">Отправить</button>
             </div>
         </div>
 
@@ -277,7 +281,7 @@
             <label>Дополнительные пожелания к картинке (опционально):</label>
             <input type="text" id="artCustomRequest" placeholder="Например: добавь неоновый свет, стиль нуар...">
 
-            <button class="action-btn" onclick="generateVisual()">Создать визуал через ИИ</button>
+            <button class="action-btn send-btn-ctrl" onclick="generateVisual()">Создать визуал через ИИ</button>
             
             <div id="artLoading" style="display:none; margin-top: 15px; font-weight: bold; color: #0066cc;">ИИ-арт-директор формирует промпт и рисует...</div>
             
@@ -296,13 +300,11 @@
             <button class="action-btn" style="padding:3px 8px; font-size:11px; margin-top:0;" onclick="loadProjectsFromCloud()">🔄</button>
         </div>
 
-        <!-- Контейнер событий -->
         <div id="sideEventsView">
             <p style="font-size:12px; color:#64748b; margin-top:0;">События с датами, стадиями и целями.</p>
             <div id="eventsListContainer"><div style="font-size:12px; color:#94a3b8;">Загрузка событий...</div></div>
         </div>
 
-        <!-- Контейнер лидов -->
         <div id="sideLeadsView" style="display:none;">
             <p style="font-size:12px; color:#64748b; margin-top:0;">Найденные компании и ЛПР с контактами.</p>
             <div id="leadsListContainer"><div style="font-size:12px; color:#94a3b8;">Загрузка лидов...</div></div>
@@ -319,6 +321,73 @@
     let eventsDB = [];
     let leadsDB = [];
 
+    // === RATE LIMITER & ADAPTIVE COOLDOWN SYSTEM ===
+    let requestTimestamps = []; // временные метки запросов за последние 60 сек
+    let cooldownTimer = null;
+
+    function recordRequestAndGetCooldown() {
+        const now = Date.now();
+        requestTimestamps.push(now);
+        cleanOldTimestamps();
+        updateRateBadge();
+
+        const rpm = requestTimestamps.length;
+        // Адаптивная пауза: чем больше запросов за минуту, тем строже пауза
+        if (rpm <= 3) return 4;
+        if (rpm <= 6) return 8;
+        if (rpm <= 9) return 15;
+        return 25; // 10+ запросов: глубокая пауза во избежание 429
+    }
+
+    function cleanOldTimestamps() {
+        const cutoff = Date.now() - 60000;
+        requestTimestamps = requestTimestamps.filter(t => t > cutoff);
+    }
+
+    function updateRateBadge() {
+        cleanOldTimestamps();
+        const badge = document.getElementById('rateLimitBadge');
+        if (!badge) return;
+        const rpm = requestTimestamps.length;
+        badge.innerText = `⚡ Нагрузка: ${rpm}/10 в мин`;
+        if (rpm < 5) {
+            badge.className = 'rate-badge';
+        } else if (rpm < 8) {
+            badge.className = 'rate-badge warning';
+        } else {
+            badge.className = 'rate-badge danger';
+        }
+    }
+    setInterval(updateRateBadge, 3000);
+
+    function startCooldown(seconds) {
+        let remaining = seconds;
+        const buttons = document.querySelectorAll('.send-btn-ctrl');
+        const chips = document.querySelectorAll('.chip');
+
+        buttons.forEach(b => {
+            b.disabled = true;
+            b.dataset.originalText = b.dataset.originalText || b.innerText;
+            b.innerText = `⏳ Пауза (${remaining}с)`;
+        });
+        chips.forEach(c => c.classList.add('disabled'));
+
+        clearInterval(cooldownTimer);
+        cooldownTimer = setInterval(() => {
+            remaining--;
+            if (remaining > 0) {
+                buttons.forEach(b => b.innerText = `⏳ Пауза (${remaining}с)`);
+            } else {
+                clearInterval(cooldownTimer);
+                buttons.forEach(b => {
+                    b.disabled = false;
+                    b.innerText = b.dataset.originalText;
+                });
+                chips.forEach(c => c.classList.remove('disabled'));
+            }
+        }, 1000);
+    }
+
     function formatMessage(text) {
         return text
             .replace(/### (.*)/g, '<strong style="font-size: 15px; color: #0066cc; display: block; margin-top: 10px;">$1</strong>')
@@ -330,18 +399,6 @@
 
     function getCurrentUser() {
         return sessionStorage.getItem('theater_user') || 'admin';
-    }
-    
-    function updateKeyStatusUI() {
-        const badge = document.getElementById('keyStatusBadge');
-        const total = CONFIG.apiKeys.length;
-        if(currentKeyIndex < total) {
-            badge.innerText = `🟢 Ключ ${currentKeyIndex + 1}/${total}`;
-            badge.className = 'key-status';
-        } else {
-            badge.innerText = `🔴 Лимиты исчерпаны`;
-            badge.className = 'key-status error';
-        }
     }
 
     function checkLogin() {
@@ -377,7 +434,8 @@
 
     function initApp() {
         document.getElementById('userBadge').innerText = `👤 ${getCurrentUser()}`;
-        updateKeyStatusUI();
+        document.getElementById('keyStatusBadge').innerText = `🟢 Ключей: ${CONFIG.apiKeys.length}`;
+        updateRateBadge();
         addLinkField();
         loadProjectsFromCloud();
         renderChatUI('theater_chat_history', 'chatBox');
@@ -847,7 +905,6 @@
         processTurn('theater_chat_history', 'chatBox', PROMPT_ADMIN, "", false); 
     }
 
-    // Возвращенная кнопка "Охота за клиентами"
     function startNewPartnerHunt() {
         const projId = document.getElementById('partnerProjectSelect').value;
         if(!projId) { alert('Выберите проект!'); return; }
@@ -883,14 +940,23 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         box.innerHTML += `<div class="msg model" id="loadingMsg">Печатаю${useSearch ? ' (поиск по вебу)' : ''}...</div>`;
         box.scrollTop = box.scrollHeight;
 
-        let apiHistory = JSON.parse(JSON.stringify(history));
+        // ЭКОНОМИЯ ТОКЕНОВ (WINDOWED CONTEXT): берём только последние 6 сообщений
+        const windowSize = 6;
+        let windowedHistory = history.slice(-windowSize);
+        let apiHistory = JSON.parse(JSON.stringify(windowedHistory));
+
         if (dynamicContext && apiHistory.length > 0) {
             apiHistory[apiHistory.length - 1].parts[0].text += "\n\n" + dynamicContext;
         }
 
+        // Фиксируем запрос и запускаем адаптивный cooldown
+        const waitSec = recordRequestAndGetCooldown();
+        startCooldown(waitSec);
+
         try {
             let responseText = await fetchGeminiAPI(apiHistory, systemPrompt, useSearch);
-            document.getElementById('loadingMsg').remove();
+            const lMsg = document.getElementById('loadingMsg');
+            if (lMsg) lMsg.remove();
 
             // Перехват команды сохранения лида в CRM
             const leadMatch = responseText.match(/<<<ACTION_SAVE_LEAD:\s*([\s\S]*?)\s*>>>/);
@@ -923,7 +989,7 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                         box.innerHTML += `<div class="msg model" style="background:#fff3cd; color:#856404;">🔄 ИИ удаляет проект «${p.name}»...</div>`;
                         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: idToDelete }) });
                         await loadProjectsFromCloud();
-                        responseText = responseText.replace(deleteMatch[0], `\n🗑️️ **Проект «${p.name}» навсегда удален из базы.**\n`);
+                        responseText = responseText.replace(deleteMatch[0], `\n🗑 **Проект «${p.name}» навсегда удален из базы.**\n`);
                     }
                 }
 
@@ -955,7 +1021,8 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
             localStorage.setItem(storageKey, JSON.stringify(history));
             renderChatUI(storageKey, boxId);
         } catch (error) {
-            document.getElementById('loadingMsg').remove();
+            const lMsg = document.getElementById('loadingMsg');
+            if (lMsg) lMsg.remove();
             history.push({ role: 'model', isError: true, parts: [{ text: error.message }] });
             localStorage.setItem(storageKey, JSON.stringify(history));
             renderChatUI(storageKey, boxId);
@@ -979,6 +1046,8 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
 
         const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
+        startCooldown(recordRequestAndGetCooldown());
+
         try {
             const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.", false);
             document.getElementById('artPromptDisplay').innerText = "Промпт: " + engPrompt;
@@ -1001,10 +1070,15 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         }
     }
 
+    // === ROUND-ROBIN KEY ROTATION & API CALL ===
     async function fetchGeminiAPI(contentsArray, activeSystemPrompt, enableSearch = false) {
         const maxRetries = 3;
+        const totalKeys = CONFIG.apiKeys.length;
         
-        while(currentKeyIndex < CONFIG.apiKeys.length) {
+        // Поочередно берем следующий ключ (Round-Robin) для равномерной нагрузки
+        let keyAttemptCount = 0;
+
+        while (keyAttemptCount < totalKeys) {
             const apiKey = CONFIG.apiKeys[currentKeyIndex];
             const url = `${MODEL_URL}?key=${apiKey}`;
 
@@ -1030,32 +1104,37 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                     if (data.error) {
                         const code = data.error.code;
                         if (code === 429) {
-                            currentKeyIndex++;
-                            updateKeyStatusUI();
-                            if (currentKeyIndex >= CONFIG.apiKeys.length) {
-                                throw new Error("⚠ Лимиты исчерпаны на ВСЕХ ключах. Добавьте новые в config.js.");
-                            }
+                            // Ключ уперся в лимит: переходим к следующему
+                            currentKeyIndex = (currentKeyIndex + 1) % totalKeys;
+                            keyAttemptCount++;
                             break; 
                         }
                         if (code === 503) {
                             if (attempt < maxRetries) { await new Promise(r => setTimeout(r, 2000)); continue; }
-                            throw new Error("⚠️️ Серверы Google перегружены (503). Повторите запрос.");
+                            throw new Error("⚠️ Серверы Google перегружены (503). Повторите запрос.");
                         }
-                        if (code === 400) throw new Error("⚠ Ошибка 400 (геолокация). Включите VPN.");
+                        if (code === 400) throw new Error("⚠️ Ошибка 400 (геолокация). Включите VPN.");
                         throw new Error(`⚠️ Ошибка API (${code}): ${data.error.message}`);
                     }
+
+                    // Успешный ответ: сдвигаем индекс на следующий ключ для следующего запроса
+                    currentKeyIndex = (currentKeyIndex + 1) % totalKeys;
 
                     if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
                         return data.candidates[0].content.parts.map(p => p.text || '').join('');
                     }
                     throw new Error("⚠️ Неизвестный ответ от нейросети.");
                 } catch (error) {
-                    if (attempt === maxRetries || error.message.includes("429") || error.message.includes("ВСЕХ ключах")) {
-                        throw error;
+                    if (attempt === maxRetries || error.message.includes("429")) {
+                        currentKeyIndex = (currentKeyIndex + 1) % totalKeys;
+                        keyAttemptCount++;
+                        break;
                     }
+                    throw error;
                 }
             }
         }
+        throw new Error("⚠️ Все доступные API-ключи исчерпали минутный лимит. Подождите 30 секунд или добавьте новые ключи в config.js.");
     }
 </script>
 </body>
