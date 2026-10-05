@@ -28,7 +28,7 @@
         .login-box button { width: 100%; background: #333; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
         .header-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .rate-badge { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; border: 1px solid #c5e0b4; background: #e2f0d9; color: #2e5917; }
+        .rate-badge { font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; border: 1px solid #c5e0b4; background: #e2f0d9; color: #2e5917; transition: all 0.2s; }
         .rate-badge.warning { background: #fff2cc; color: #856404; border-color: #ffeeba; }
         .rate-badge.danger { background: #f8d7da; color: #842029; border-color: #f5c2c7; }
 
@@ -43,7 +43,7 @@
         
         button.action-btn { margin-top: 12px; background: #0066cc; color: #fff; padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background 0.15s, opacity 0.15s; }
         button.action-btn:hover:not(:disabled) { background: #004999; }
-        button.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        button.action-btn:disabled { opacity: 0.65; cursor: not-allowed; }
         button.danger-btn { background: #cc0000; }
         button.danger-btn:hover:not(:disabled) { background: #a00000; }
         button.green-btn { background: #28a745; }
@@ -109,7 +109,7 @@
             <h1 style="border:none; margin:0; padding:0;">Управление продажами & AI</h1>
             <div class="header-badges">
                 <span id="userBadge" style="font-size:12px; font-weight:bold; color:#0369a1; background:#e0f2fe; padding:4px 8px; border-radius:12px;">👤 Вход...</span>
-                <span id="rateLimitBadge" class="rate-badge">⚡ Нагрузка: 0/10 в мин</span>
+                <span id="rateLimitBadge" class="rate-badge">⚡ Команда: 0/10 в мин</span>
                 <span id="keyStatusBadge" class="rate-badge">🟢 Ротация ключей</span>
             </div>
         </div>
@@ -320,36 +320,15 @@
     let projectsDB = [];
     let eventsDB = [];
     let leadsDB = [];
-
-    // === RATE LIMITER & ADAPTIVE COOLDOWN SYSTEM ===
-    let requestTimestamps = []; // временные метки запросов за последние 60 сек
+    let globalTeamRPM = 0;
     let cooldownTimer = null;
 
-    function recordRequestAndGetCooldown() {
-        const now = Date.now();
-        requestTimestamps.push(now);
-        cleanOldTimestamps();
-        updateRateBadge();
-
-        const rpm = requestTimestamps.length;
-        // Адаптивная пауза: чем больше запросов за минуту, тем строже пауза
-        if (rpm <= 3) return 4;
-        if (rpm <= 6) return 8;
-        if (rpm <= 9) return 15;
-        return 25; // 10+ запросов: глубокая пауза во избежание 429
-    }
-
-    function cleanOldTimestamps() {
-        const cutoff = Date.now() - 60000;
-        requestTimestamps = requestTimestamps.filter(t => t > cutoff);
-    }
-
-    function updateRateBadge() {
-        cleanOldTimestamps();
+    // Обновление бейджа нагрузки команды
+    function setTeamRPM(rpm) {
+        globalTeamRPM = rpm;
         const badge = document.getElementById('rateLimitBadge');
         if (!badge) return;
-        const rpm = requestTimestamps.length;
-        badge.innerText = `⚡ Нагрузка: ${rpm}/10 в мин`;
+        badge.innerText = `⚡ Команда: ${rpm}/10 в мин`;
         if (rpm < 5) {
             badge.className = 'rate-badge';
         } else if (rpm < 8) {
@@ -358,16 +337,63 @@
             badge.className = 'rate-badge danger';
         }
     }
-    setInterval(updateRateBadge, 3000);
 
-    function startCooldown(seconds) {
+    // Сохранение факта запроса в Google Таблицу и получение актуального RPM команды
+    async function recordTeamRequest() {
+        try {
+            const resp = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ scope: 'rate_limit', user: getCurrentUser() })
+            });
+            const data = await resp.json();
+            if (data.teamRPM !== undefined) {
+                setTeamRPM(data.teamRPM);
+                return data.teamRPM;
+            }
+        } catch(e) {
+            console.warn('Не удалось зафиксировать нагрузку в таблице:', e);
+        }
+        return globalTeamRPM;
+    }
+
+    // Расчет длительности паузы после ответа ИИ
+    function calculateCooldownSeconds(rpm) {
+        if (rpm <= 3) return 4;
+        if (rpm <= 6) return 8;
+        if (rpm <= 9) return 15;
+        return 25;
+    }
+
+    // Блокировка кнопок во время генерации (БЕЗ отсчета таймера)
+    function setButtonsGeneratingState(isGenerating) {
+        const buttons = document.querySelectorAll('.send-btn-ctrl');
+        const chips = document.querySelectorAll('.chip');
+
+        buttons.forEach(b => {
+            if (isGenerating) {
+                b.disabled = true;
+                b.dataset.originalText = b.dataset.originalText || b.innerText;
+                b.innerText = '⏳ Печатаю...';
+            } else if (!cooldownTimer) {
+                b.disabled = false;
+                b.innerText = b.dataset.originalText || 'Отправить';
+            }
+        });
+
+        chips.forEach(c => {
+            if (isGenerating) c.classList.add('disabled');
+            else if (!cooldownTimer) c.classList.remove('disabled');
+        });
+    }
+
+    // Запуск обратного отсчета (ТОЛЬКО ПОСЛЕ завершения ответа)
+    function startCooldownAfterResponse(seconds) {
         let remaining = seconds;
         const buttons = document.querySelectorAll('.send-btn-ctrl');
         const chips = document.querySelectorAll('.chip');
 
         buttons.forEach(b => {
             b.disabled = true;
-            b.dataset.originalText = b.dataset.originalText || b.innerText;
             b.innerText = `⏳ Пауза (${remaining}с)`;
         });
         chips.forEach(c => c.classList.add('disabled'));
@@ -379,9 +405,10 @@
                 buttons.forEach(b => b.innerText = `⏳ Пауза (${remaining}с)`);
             } else {
                 clearInterval(cooldownTimer);
+                cooldownTimer = null;
                 buttons.forEach(b => {
                     b.disabled = false;
-                    b.innerText = b.dataset.originalText;
+                    b.innerText = b.dataset.originalText || 'Отправить';
                 });
                 chips.forEach(c => c.classList.remove('disabled'));
             }
@@ -435,12 +462,20 @@
     function initApp() {
         document.getElementById('userBadge').innerText = `👤 ${getCurrentUser()}`;
         document.getElementById('keyStatusBadge').innerText = `🟢 Ключей: ${CONFIG.apiKeys.length}`;
-        updateRateBadge();
         addLinkField();
         loadProjectsFromCloud();
         renderChatUI('theater_chat_history', 'chatBox');
         renderChatUI('theater_builder_chat_history', 'builderChatBox');
         renderChatUI('theater_partner_chat_history', 'partnerChatBox');
+        
+        // Регулярная синхронизация минутного лимита команды раз в 15 секунд
+        setInterval(async () => {
+            try {
+                const resp = await fetch(SCRIPT_URL);
+                const d = await resp.json();
+                if (d.teamRPM !== undefined) setTeamRPM(d.teamRPM);
+            } catch(e) {}
+        }, 15000);
     }
 
     function switchTab(index) {
@@ -472,6 +507,7 @@
                 projectsDB = data.projects;
                 eventsDB = data.events || [];
                 leadsDB = data.leads || [];
+                if (data.teamRPM !== undefined) setTeamRPM(data.teamRPM);
             } else if (Array.isArray(data)) {
                 projectsDB = data;
                 eventsDB = [];
@@ -940,7 +976,13 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         box.innerHTML += `<div class="msg model" id="loadingMsg">Печатаю${useSearch ? ' (поиск по вебу)' : ''}...</div>`;
         box.scrollTop = box.scrollHeight;
 
-        // ЭКОНОМИЯ ТОКЕНОВ (WINDOWED CONTEXT): берём только последние 6 сообщений
+        // Блокируем кнопку на время генерации БЕЗ запуска обратного отсчета
+        setButtonsGeneratingState(true);
+
+        // Фиксируем запрос команды в Google Таблице и получаем актуальный RPM команды
+        const teamRPM = await recordTeamRequest();
+
+        // Окно контекста в 6 сообщений
         const windowSize = 6;
         let windowedHistory = history.slice(-windowSize);
         let apiHistory = JSON.parse(JSON.stringify(windowedHistory));
@@ -948,10 +990,6 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         if (dynamicContext && apiHistory.length > 0) {
             apiHistory[apiHistory.length - 1].parts[0].text += "\n\n" + dynamicContext;
         }
-
-        // Фиксируем запрос и запускаем адаптивный cooldown
-        const waitSec = recordRequestAndGetCooldown();
-        startCooldown(waitSec);
 
         try {
             let responseText = await fetchGeminiAPI(apiHistory, systemPrompt, useSearch);
@@ -1026,6 +1064,10 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
             history.push({ role: 'model', isError: true, parts: [{ text: error.message }] });
             localStorage.setItem(storageKey, JSON.stringify(history));
             renderChatUI(storageKey, boxId);
+        } finally {
+            // ЗАПУСК ОБРАТНОГО ОТСЧЕТА ТОЛЬКО ПОСЛЕ ЗАВЕРШЕНИЯ ГЕНЕРАЦИИ
+            const cooldownSec = calculateCooldownSeconds(teamRPM);
+            startCooldownAfterResponse(cooldownSec);
         }
     }
 
@@ -1044,9 +1086,10 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         document.getElementById('imagePreviewContainer').innerHTML = '';
         document.getElementById('artPromptDisplay').innerText = '';
 
-        const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
+        setButtonsGeneratingState(true);
+        const teamRPM = await recordTeamRequest();
 
-        startCooldown(recordRequestAndGetCooldown());
+        const artPrompt = `${PROMPT_ART}\n${getProjectContext(projId)}\nПожелания: ${customReq}`;
 
         try {
             const engPrompt = await fetchGeminiAPI([{ role: 'user', parts: [{ text: artPrompt }] }], "You are an Art Director. Output ONLY the English image generation prompt. No intro, no quotes, no markdown.", false);
@@ -1067,15 +1110,15 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
         } catch(error) {
             document.getElementById('artLoading').style.display = 'none';
             document.getElementById('artPromptDisplay').innerText = error.message;
+        } finally {
+            const cooldownSec = calculateCooldownSeconds(teamRPM);
+            startCooldownAfterResponse(cooldownSec);
         }
     }
 
-    // === ROUND-ROBIN KEY ROTATION & API CALL ===
     async function fetchGeminiAPI(contentsArray, activeSystemPrompt, enableSearch = false) {
         const maxRetries = 3;
         const totalKeys = CONFIG.apiKeys.length;
-        
-        // Поочередно берем следующий ключ (Round-Robin) для равномерной нагрузки
         let keyAttemptCount = 0;
 
         while (keyAttemptCount < totalKeys) {
@@ -1104,7 +1147,6 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                     if (data.error) {
                         const code = data.error.code;
                         if (code === 429) {
-                            // Ключ уперся в лимит: переходим к следующему
                             currentKeyIndex = (currentKeyIndex + 1) % totalKeys;
                             keyAttemptCount++;
                             break; 
@@ -1117,7 +1159,6 @@ ${preset ? `ФОКУС-СЕГМЕНТ: ${preset}` : ''}
                         throw new Error(`⚠️ Ошибка API (${code}): ${data.error.message}`);
                     }
 
-                    // Успешный ответ: сдвигаем индекс на следующий ключ для следующего запроса
                     currentKeyIndex = (currentKeyIndex + 1) % totalKeys;
 
                     if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
